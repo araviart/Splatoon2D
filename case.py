@@ -19,7 +19,13 @@ def Case(mur=False, couleur=' ', objet=const.AUCUN, joueurs_presents=None):
     Returns:
         dict: un dictionnaire représentant une case du plateau
     """
-    ...
+    return {
+        "couleur" : couleur, 
+        "mur" : mur,
+        "objet" : objet,
+        "joueurs_presents" : joueurs_presents, }
+
+print(Case(mur=False, couleur=' ', objet=const.AUCUN, joueurs_presents=None))
 
 def est_mur(case):
     """indique si la case est un mur ou non
@@ -30,7 +36,7 @@ def est_mur(case):
     Returns:
         bool: True si la case est un mur et False sinon
     """
-    ...
+    return case['mur']
 
 
 def get_couleur(case):
@@ -45,7 +51,7 @@ def get_couleur(case):
     Returns:
         str: l'identifiant du joueur qui a peint la case ou la chaine vide
     """
-    ...
+    return case['couleur']
 
 
 def get_objet(case):
@@ -57,7 +63,7 @@ def get_objet(case):
     Returns:
         int: l'identifiant de l'objet qui se trouve sur la case.
     """
-    ...
+    return case['objet']
 
 
 def get_joueurs(case):
@@ -69,7 +75,11 @@ def get_joueurs(case):
     Returns:
         set: l'ensemble des identifiants de joueurs présents su la case.
     """
-    ...
+    if case['joueurs_presents'] is None:
+        return set()
+    return set(case['joueurs_presents'])
+
+print(get_joueursCase(mur=False, couleur=' ', objet=const.AUCUN, joueurs_presents=None))
 
 
 def get_nb_joueurs(case):
@@ -81,7 +91,7 @@ def get_nb_joueurs(case):
     Returns:
         int: le nombre de joueurs présents sur la case.
     """
-    ...
+    return len(get_joueurs(case))
 
 
 def peindre(case, couleur):
@@ -96,8 +106,9 @@ def peindre(case, couleur):
     Returns:
         set: l'ensemble des identifiants des joueurs présents sur la carte
     """
-    ...
-
+    case['couleur'] = couleur
+    print(case['couleur'])
+    return get_joueurs(case) 
     
 def laver(case):
     """Enlève la peinture qui était enventuellement sur la case
@@ -105,7 +116,7 @@ def laver(case):
     Args:
         case (dict): la case considérée. On considère que cette case n'est pas un mur.
     """
-    ...
+    case['couleur'] = ' '
 
 
 def poser_objet(case, objet):
@@ -116,12 +127,12 @@ def poser_objet(case, objet):
         objet (int): identifiant d'objet. const.AUCUN indiquant que plus aucun objet se
                 trouve sur la case.
     """
-    ...
+    case['objet'] = objet
 
 
 def prendre_objet(case):
     """Enlève l'objet qui se trouve sur la case et retourne l'identifiant de cet objet.
-        Si aucun objet se trouve sur la case la fonction retourne const.UCUN.
+        Si aucun objet se trouve sur la case la fonction retourne const.AUCUN.
 
     Args:
         case (dict): la case considérée
@@ -129,7 +140,11 @@ def prendre_objet(case):
     Returns:
         int: l'identifiant de l'objet que si trouve sur la case.
     """
-    ...
+
+    res = case['objet']
+    case['objet'] = 0
+    return res
+    
 
 
 def poser_joueur(case, joueur):
@@ -139,7 +154,8 @@ def poser_joueur(case, joueur):
         case (dict): la case considérée
         joueur (str): identifiant du joueur à ajouter sur la case
     """
-    ...
+    case['joueurs_presents'] = get_joueurs(case)
+    case['joueurs_presents'].add(joueur)
 
 
 def prendre_joueur(case, joueur):
@@ -153,4 +169,7 @@ def prendre_joueur(case, joueur):
     Returns:
         bool: True si le joueur était bien sur la case et False sinon.
     """
-    ...
+    res = case['joueurs_presents']
+    if get_joueurs(case) != None:
+        case['joueurs_presents'] = get_joueurs(case).remove(joueur)
+    return joueur in res
