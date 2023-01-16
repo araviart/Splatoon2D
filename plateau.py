@@ -79,8 +79,21 @@ def plateau_from_str(la_chaine):
     Returns:
         dict: le plateau correspondant à la chaine. None si l'opération a échoué
     """
-
-
+    plateau = dict()
+    la_chaine = la_chaine.split("\n")
+    [nb_lignes,nb_colonnes]=(la_chaine[0], la_chaine[1])
+    nb_colonnes=int(nb_colonnes)
+    x = -1
+    y = -1
+    while x <= nb_lignes and y <= nb_colonnes:
+        if x == -1 and y ==-1:
+            pass
+        for ligne in la_chaine:
+            y += 1
+            for terme in ligne:
+                x += 1
+                plateau[x, y] = terme
+    return plateau
 
 def Plateau(plan):
     """Créer un plateau en respectant le plan donné en paramètre.
@@ -95,7 +108,7 @@ def Plateau(plan):
     Returns:
         dict: Le plateau correspondant au plan
     """
-    ...
+    
 
 
 def set_case(plateau, pos, une_case):
