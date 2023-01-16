@@ -24,7 +24,6 @@ def Case(mur=False, couleur=' ', objet=const.AUCUN, joueurs_presents=None):
         "objet" : objet,
         "joueurs_presents" : joueurs_presents, }
 
-print(Case(mur=False, couleur=' ', objet=const.AUCUN, joueurs_presents=None))
 
 def est_mur(case):
     """indique si la case est un mur ou non
