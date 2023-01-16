@@ -18,7 +18,15 @@ def Joueur(couleur, nom, reserve, surface, position, objet, duree_objet):
     Returns:
         dict: un dictionnaire représentant le joueur
     """
-    ...
+    return {
+        "couleur": couleur, 
+        "nom": nom,
+        "reserve": reserve, 
+        "surface": surface,
+        "position": position, 
+        "objet": objet,
+        "duree_objet": duree_objet
+    }
 
     
 def joueur_from_str(description):
@@ -33,7 +41,11 @@ def joueur_from_str(description):
     Returns:
         dict: le joueur ayant les caractéristiques décrite dans la chaine.
     """
-    ...
+    # sépare la chaine de caractère (par les ;) en tableau 
+    info = description.split(";")
+
+    position = (int(info[5]), int(info[6]))
+    return Joueur(info[0], info[7], int(info[1]), int(info[2]), position, int(info[3]), int(info[4]))
 
 def get_couleur(joueur):
     """retourne la couleur du joueur
@@ -44,7 +56,7 @@ def get_couleur(joueur):
     Returns:
         str: une lettre indiquant la couleur du joueur
     """
-    ...
+    return joueur["couleur"]
 
 
 def get_nom(joueur):
@@ -56,7 +68,7 @@ def get_nom(joueur):
     Returns:
         str: le nom du joueur
     """
-    ...
+    return joueur["nom"]
 
 
 def get_reserve(joueur):
@@ -66,7 +78,7 @@ def get_reserve(joueur):
     Returns:
         int: la réserve du joueur
     """
-    ...
+    return joueur["reserve"]
 
 
 def get_surface(joueur):
@@ -78,7 +90,7 @@ def get_surface(joueur):
     Returns:
         int: le nombre de cases peintes du joueur
     """
-    ...
+    return joueur["surface"]
 
 
 def get_objet(joueur):
@@ -88,9 +100,8 @@ def get_objet(joueur):
     Returns:
         int: un entier indiquant l'objet possédé par le joueur
     """
-    ...
+    return joueur["objet"]
     
-
 def get_duree(joueur):
     """retourne la duree de vie de l'objet possédé par le joueur
     joueur (dict): le joueur considéré
@@ -98,7 +109,7 @@ def get_duree(joueur):
     Returns:
         int: un entier indiquant la durée de vie l'objet possédé par le joueur
     """
-    ...
+    return joueur["duree_objet"]
 
     
 def get_pos(joueur):
@@ -109,7 +120,7 @@ def get_pos(joueur):
     Returns:
         tuple: une paire d'entiers indiquant la position du joueur.
     """
-    ...
+    return joueur["position"]
 
 
 def set_pos(joueur, pos):
@@ -119,7 +130,7 @@ def set_pos(joueur, pos):
         joueur (dict): le joueur considéré
         pos (tuple): une paire d'entier (lin,col) indiquant la position du joueur
     """
-    ...
+    joueur["position"] = pos
 
 
 def modifie_reserve(joueur, quantite):
@@ -133,7 +144,8 @@ def modifie_reserve(joueur, quantite):
     Returns:
         int: la nouvelle valeur de la réserve
     """
-    ...
+    joueur["reserve"] = joueur["reserve"] + quantite
+    return joueur["reserve"]
 
 def set_surface(joueur, surface):
     """met à jour la surface du joueur
@@ -142,7 +154,7 @@ def set_surface(joueur, surface):
         joueur (dict): le joueur considéré
         surface (int): la nouvelle valeur de la surface
     """
-    ...
+    joueur["surface"] = surface
 
 
 def ajouter_objet(joueur, objet, duree):
@@ -154,7 +166,12 @@ def ajouter_objet(joueur, objet, duree):
         objet (int): l'objet considéré
         duree (int): la durée de vie de l'objet
     """
-    ...
+    if objet == const.BIDON:
+        if get_reserve(joueur) < 0:
+            modifie_reserve(joueur, int(get_reserve(joueur) * -1))
+    else:
+        joueur["objet"] = objet
+        joueur["duree_objet"] = duree
 
     
 def maj_duree(joueur):
@@ -164,5 +181,10 @@ def maj_duree(joueur):
     Args:
         joueur (dict): le joueur considéré
     """
-    ...
+    if get_duree(joueur) >= 1:
+        joueur["duree_objet"] -= 1
+
+    if get_duree(joueur) <= 0:
+        joueur["duree_objet"] = 0
+        joueur["objet"] = const.AUCUN
     
