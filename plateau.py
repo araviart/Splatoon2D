@@ -83,11 +83,11 @@ def plateau_from_str(la_chaine):
     la_chaine = la_chaine.split("\n")
     [nb_lignes,nb_colonnes]=(la_chaine[0], la_chaine[1])
     nb_colonnes=int(nb_colonnes)
+    nb_lignes=int(nb_colonnes)
     x = -1
     y = -1
+    la_chaine = la_chaine[1::-1]
     while x <= nb_lignes and y <= nb_colonnes:
-        if x == -1 and y ==-1:
-            pass
         for ligne in la_chaine:
             y += 1
             for terme in ligne:
@@ -108,6 +108,7 @@ def Plateau(plan):
     Returns:
         dict: Le plateau correspondant au plan
     """
+    
     
 
 
