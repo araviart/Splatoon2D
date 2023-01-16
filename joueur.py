@@ -19,7 +19,7 @@ def Joueur(couleur, nom, reserve, surface, position, objet, duree_objet):
         dict: un dictionnaire représentant le joueur
     """
     return {
-        "couleur": couleur, 
+        "couleur": couleur,
         "nom": nom,
         "reserve": reserve, 
         "surface": surface,

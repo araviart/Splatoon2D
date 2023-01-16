@@ -79,17 +79,8 @@ def plateau_from_str(la_chaine):
     Returns:
         dict: le plateau correspondant à la chaine. None si l'opération a échoué
     """
-    plateau = dict()
-    fic = open("plans/plan1.txt", 'r')
-    [nb_lignes,nb_colonnes]=fic.readline()[0].split(";")
-    nb_lignes=int(nb_lignes)
-    nb_colonnes=int(nb_colonnes)
-    for ligne in fic:
-        for terme in ligne:
-            plateau[]
 
-            
-    
+
 
 def Plateau(plan):
     """Créer un plateau en respectant le plan donné en paramètre.
