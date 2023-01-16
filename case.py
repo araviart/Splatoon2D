@@ -2,7 +2,6 @@
 """
 import const
 
-
 def Case(mur=False, couleur=' ', objet=const.AUCUN, joueurs_presents=None):
     """Permet de créer une case du plateau
 
@@ -107,7 +106,6 @@ def peindre(case, couleur):
         set: l'ensemble des identifiants des joueurs présents sur la carte
     """
     case['couleur'] = couleur
-    print(case['couleur'])
     return get_joueurs(case) 
     
 def laver(case):
@@ -145,7 +143,6 @@ def prendre_objet(case):
     case['objet'] = 0
     return res
     
-
 
 def poser_joueur(case, joueur):
     """Pose un nouveau joueur sur la case
