@@ -79,7 +79,7 @@ def get_joueurs(case):
         return set()
     return set(case['joueurs_presents'])
 
-print(get_joueursCase(mur=False, couleur=' ', objet=const.AUCUN, joueurs_presents=None))
+
 
 
 def get_nb_joueurs(case):
@@ -169,7 +169,12 @@ def prendre_joueur(case, joueur):
     Returns:
         bool: True si le joueur était bien sur la case et False sinon.
     """
-    res = case['joueurs_presents']
-    if get_joueurs(case) != None:
-        case['joueurs_presents'] = get_joueurs(case).remove(joueur)
-    return joueur in res
+    if case["joueurs_presents"] is None:
+        return False
+    
+    if joueur in case["joueurs_presents"]:
+        case["joueurs_presents"].remove(joueur)
+        return True
+    
+    return False
+
