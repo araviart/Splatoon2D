@@ -81,19 +81,20 @@ def plateau_from_str(la_chaine):
     """
     plateau = dict()
     la_chaine = la_chaine.split("\n")
-    [nb_lignes,nb_colonnes]=(la_chaine[0], la_chaine[1])
-    nb_colonnes=int(nb_colonnes)
-    nb_lignes=int(nb_colonnes)
     x = -1
     y = -1
-    la_chaine = la_chaine[1::-1]
-    while x <= nb_lignes and y <= nb_colonnes:
-        for ligne in la_chaine:
-            y += 1
-            for terme in ligne:
-                x += 1
-                plateau[x, y] = terme
+    la_chaine = la_chaine[1::] # on omet la première ligne qui n'est pas matrice
+    for ligne in la_chaine:
+        y += 1
+        x = 0
+        for terme in ligne:
+            if terme == " ":
+                plateau[x, y] = case.Case()
+            else: 
+                plateau[x, y] = case.Case(True)
+            x += 1
     return plateau
+#print(plateau_from_str("12;12\n #   #  ##  #\n   # #     ##\n #     ###  #\n #   #  #   #\n#   #    #\n #  ##  #### \n#           \n#   #  #  ##\n# #    ##  #\n#   #  ##  #\n   # #     ##\n#     ###  # "))
 
 def Plateau(plan):
     """Créer un plateau en respectant le plan donné en paramètre.
@@ -108,7 +109,33 @@ def Plateau(plan):
     Returns:
         dict: Le plateau correspondant au plan
     """
-    
+    plateau = dict()
+    le_plan = plan.split("\n")
+    le_plan_l_c = str(le_plan[0]).split(';')
+    [nb_colonnes, nb_lignes] = le_plan_l_c[0], le_plan_l_c[1]
+    x = -1
+    y = -1
+    while y <= nb_colonnes and x <= nb_lignes:
+        for ligne in le_plan:
+            y += 1
+            x = 0
+        for terme in ligne:
+            if terme == " ":
+                plateau[x, y] = case.Case()
+            elif terme in "abcd":
+                plateau[x, y] = case.Case(True, terme)
+            elif terme in "ABCD":
+                plateau[x, y] = case.Case(False, terme)
+            else:
+                plateau[x, y] = case.Case(True)
+    le_plan = le_plan[len(le_plan)-1::-1]
+    for ligne in le_plan:
+        ligne_val_x_y = ligne.split(";")
+        if len(ligne_val_x_y) > 1:
+            plateau[ligne_val_x_y[0],ligne_val_x_y[1]] = case.Case(False, terme)
+    return plateau
+
+print(Plateau("4;6\n #  b#\n   A## \n ##A   \n   Aa##\n 2\n A;1;1\n B;3;0\n 0"))
     
 
 
