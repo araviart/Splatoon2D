@@ -9,6 +9,7 @@ import case
 INC_DIRECTION = {'N': (-1, 0), 'E': (0, 1), 'S': (1, 0),
                  'O': (0, -1), 'X': (0, 0)}
 
+# plateau = { (0, 0) : ' ', (0,1) : ' ', (0, 2) : ' '}
 
 def get_nb_lignes(plateau):
     """retourne le nombre de lignes du plateau
@@ -19,7 +20,8 @@ def get_nb_lignes(plateau):
     Returns:
         int: le nombre de lignes du plateau
     """
-    ...
+    return max(plateau.keys())[0]+1
+
 
 
 def get_nb_colonnes(plateau):
@@ -31,7 +33,7 @@ def get_nb_colonnes(plateau):
     Returns:
         int: le nombre de colonnes du plateau
     """
-    ...
+    return max(plateau.keys())[1]+1
 
 
 def get_case(plateau, pos):
@@ -44,7 +46,7 @@ def get_case(plateau, pos):
     Returns:
         dict: La case qui se situe à la position pos du plateau
     """
-    ...
+    return plateau[pos]
 
 def poser_joueur(plateau, joueur, pos):
     """pose un joueur en position pos sur le plateau
@@ -54,7 +56,7 @@ def poser_joueur(plateau, joueur, pos):
         joueur (str): la lettre représentant le joueur
         pos (tuple): une paire (lig,col) de deux int
     """
-    ...
+    plateau[pos] = joueur
 
 def poser_objet(plateau, objet, pos):
     """Pose un objet en position pos sur le plateau. Si cette case contenait déjà
@@ -65,7 +67,7 @@ def poser_objet(plateau, objet, pos):
         objet (int): un entier représentant l'objet. const.AUCUN indique aucun objet
         pos (tuple): une paire (lig,col) de deux int
     """
-    ...
+    plateau[pos] = objet
 
 def plateau_from_str(la_chaine):
     """Construit un plateau à partir d'une chaine de caractère contenant les informations
@@ -77,7 +79,16 @@ def plateau_from_str(la_chaine):
     Returns:
         dict: le plateau correspondant à la chaine. None si l'opération a échoué
     """
-    ...
+    plateau = dict()
+    fic = open("plans/plan1.txt", 'r')
+    [nb_lignes,nb_colonnes]=fic.readline()[0].split(";")
+    nb_lignes=int(nb_lignes)
+    nb_colonnes=int(nb_colonnes)
+    for ligne in fic:
+        for terme in ligne:
+            plateau[]
+
+            
     
 
 def Plateau(plan):
