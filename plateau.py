@@ -113,21 +113,25 @@ def Plateau(plan):
     le_plan = plan.split("\n")
     le_plan_l_c = str(le_plan[0]).split(';')
     [nb_colonnes, nb_lignes] = le_plan_l_c[0], le_plan_l_c[1]
+    nb_colonnes = int(nb_colonnes)
+    nb_lignes = int(nb_lignes)
+    le_plan = le_plan[1::]
     x = -1
     y = -1
     while y <= nb_colonnes and x <= nb_lignes:
         for ligne in le_plan:
             y += 1
             x = 0
-        for terme in ligne:
-            if terme == " ":
-                plateau[x, y] = case.Case()
-            elif terme in "abcd":
-                plateau[x, y] = case.Case(True, terme)
-            elif terme in "ABCD":
-                plateau[x, y] = case.Case(False, terme)
-            else:
-                plateau[x, y] = case.Case(True)
+            for terme in ligne:
+                if terme == " ":
+                    plateau[x, y] = case.Case()
+                elif terme in "abcd":
+                    plateau[x, y] = case.Case(True, terme)
+                elif terme in "ABCD":
+                    plateau[x, y] = case.Case(False, terme)
+                else:
+                    plateau[x, y] = case.Case(True)
+                x += 1
     le_plan = le_plan[len(le_plan)-1::-1]
     for ligne in le_plan:
         ligne_val_x_y = ligne.split(";")
