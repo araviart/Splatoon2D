@@ -218,13 +218,23 @@ def deplacer_joueur(plateau, joueur, pos, direction):
             - une paire (lig,col) indiquant la position d'arrivée du joueur (None si
                 le joueur n'a pas pu se déplacer)
     """
+    #securité pour validité du déplacement
+    nb_lignes  = get_nb_lignes(plateau)
+    nb_colonnes = get_nb_colonnes(plateau)
     # déplacement 
     new_direc = None
     if direction == "N":
-        new_direc = pos[0]+INC_DIRECTION['N'][0], pos[1]+INC_DIRECTION['N'][0]
+        new_direc = pos[0]+INC_DIRECTION['N'][0], pos[1]+INC_DIRECTION['N'][1]
     elif direction == 'E':
-        if direction == "N":
-        new_direc = pos[0]+INC_DIRECTION['E'][0], pos[1]+INC_DIRECTION['E'][0]
+        new_direc = pos[0]+INC_DIRECTION['E'][0], pos[1]+INC_DIRECTION['E'][1]
+    elif direction == 'S':
+        new_direc = pos[0]+INC_DIRECTION['S'][0], pos[1]+INC_DIRECTION['S'][1]
+    elif direction == 'X':
+        new_direc = pos[0]+INC_DIRECTION['X'][0], pos[1]+INC_DIRECTION['X'][1]
+    # validité du déplacement 
+    if new_direc[1] < nb_lignes and new_direc[0] < nb_colonnes:
+        if 
+    
 
     
 
