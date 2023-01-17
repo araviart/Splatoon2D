@@ -355,24 +355,40 @@ def peindre(plateau, pos, direction, couleur, reserve, distance_max, peindre_mur
     nb_repeintes = 0
     nb_murs_repeints = 0
     joueurs_touches = set()
-        
-    positions = []
+
+    cases = []
+    murs = []
     direction = INC_DIRECTION[direction]
-    mur = False
+    stop = False
+
     for i in range(distance_max):
-        if pos[0] >= 0 and pos[0] < get_nb_lignes(plateau) and pos[1] >= 0 and pos[1] < get_nb_colonnes(plateau):
 
+        if pos[0] >= 0 and pos[0] < get_nb_lignes(plateau) and pos[1] >= 0 and pos[1] < get_nb_colonnes(plateau):   
             if case.est_mur(get_case(plateau, pos)):
-                mur = True
+                stop = True
                 if peindre_murs:
-                    positions.append(pos)
-                    nb_murs_repeints += 1
+                    murs.append(pos)
+                    pos = (pos[0] + direction[0], pos[1] + direction[1])
 
-            if mur is False:
-                positions.append(pos)
+            elif stop is False:
+                cases.append(pos)
                 pos = (pos[0] + direction[0], pos[1] + direction[1])
 
-    for pos in positions:
+    for mur in murs:
+        case_pl = get_case(plateau, mur)
+        if case.get_couleur(case_pl) == " ":
+            cout += 1
+            nb_murs_repeints += 1
+            nb_repeintes += 1
+            case.peindre(case_pl, couleur)
+
+        elif case.get_couleur(case_pl) != couleur:
+            cout += 2
+            nb_murs_repeints += 1
+            nb_repeintes += 1
+            case.peindre(case_pl, couleur)
+
+    for pos in cases:
         case_pl = get_case(plateau, pos)
         if case.get_couleur(case_pl) == " ":
             cout += 1
@@ -384,7 +400,6 @@ def peindre(plateau, pos, direction, couleur, reserve, distance_max, peindre_mur
             case.peindre(case_pl, couleur)
         else:
             cout += 1
-            nb_repeintes += 1
 
         for joueur in case.get_joueurs(case_pl):
             joueurs_touches.add(joueur)

@@ -82,7 +82,7 @@ class test_case(unittest.TestCase):
             objo=case.get_objet(plateau.get_case(le_plateau,(lin,col)))
             if objo != obj:
                 return "La case "+str(lin)+","+str(col)+\
-                            " devrait contenir l'objet "+obj+\
+                            " devrait contenir l'objet "+str(obj)+\
                             " alors qu'elle contient l'objet "+\
                             str(objo)
         return None
