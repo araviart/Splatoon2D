@@ -33,9 +33,9 @@ def get_nb_colonnes(plateau):
     Returns:
         int: le nombre de colonnes du plateau
     """
-    ordo_y = [x for x, y in plateau.keys()]
-    max_x = max(ordo_y)
-    return max_x+1 #ou sans +1 a test
+    def colonne(tuple):
+        return tuple[1]
+    return max(plateau, key=colonne)[1]+1
 
 
 def get_case(plateau, pos):
@@ -112,44 +112,42 @@ def Plateau(plan):
     Returns:
         dict: Le plateau correspondant au plan
     """
+    les_lignes=plan.split("\n")
+    [nb_lignes,nb_colonnes]=les_lignes[0].split(";")
+
     plateau = dict()
-    le_plan = plan.split("\n")
-    le_plan_l_c = str(le_plan[0]).split(';')
-    [nb_colonnes, nb_lignes] = le_plan_l_c[0], le_plan_l_c[1]
-    nb_colonnes = int(nb_colonnes)
-    nb_lignes = int(nb_lignes)
-    le_plan = le_plan[1:] # on omet le première ligne 4;6
-    y = -1
-    for ligne in le_plan:
-        y += 1
-        x = 0
-        if y != nb_colonnes:
-            for terme in ligne:
-                if terme == " ":
-                    plateau[x, y] = case.Case()
-                elif terme in "abcd":
-                    plateau[x, y] = case.Case(True, terme)
-                elif terme in "ABCD":
-                    plateau[x, y] = case.Case(False, terme)
-                else:
-                    plateau[x, y] = case.Case(True, terme)
-                x += 1
-        else:
-            break
-    le_plan_new = le_plan[nb_colonnes:]
-    # traitement des lignes 
-    for ligne in le_plan_new:
-        ligne_val_x_y = ligne.split(";")
-        if len(ligne_val_x_y) > 1:
-            if str((ligne_val_x_y[0])).isalpha():
-                plateau[int(ligne_val_x_y[2]),int(ligne_val_x_y[1])] = case.Case(False, couleur = ligne_val_x_y[0], joueurs_presents=True)
+    lignes = plan.split("\n")
+    lignes.pop(0)
+    l, c = 0, 0
+    for ligne in lignes:
+        if l < int(nb_lignes):
+            for lettre in ligne:
+                if lettre == "#":
+                    plateau[(l, c)] = case.Case(True)
+                elif lettre == " ":
+                    plateau[(l, c)] = case.Case(False, " ", joueurs_presents=set())
+                elif lettre in "abcdefg":
+                    plateau[(l, c)] = case.Case(True, lettre)
+                elif lettre in "ABCDEFG":
+                    plateau[(l, c)] = case.Case(False, lettre, joueurs_presents=set())
+                c += 1
+            l += 1
+            c = 0
+    joueurs = lignes[l:]
+    for elem in joueurs:
+        if len(elem) > 2:
+            p = elem.split(";")
+            l = int(p[1])
+            c = int(p[2])
+            case_pl = get_case(plateau, (l, c))
+            if p[0].isalpha():
+                case.poser_joueur(case_pl, p[0])
             else:
-                plateau[int(ligne_val_x_y[2]),int(ligne_val_x_y[1])] = case.Case(False, objet=ligne_val_x_y[0])
+                case.poser_objet(case_pl, int(p[0]))
+
     return plateau
 
-print(get_nb_lignes(Plateau((open("plans/plan2.txt").read()))))
-print(get_nb_colonnes(Plateau((open("plans/plan2.txt").read()))))
-print(Plateau(open("plans/plan1.txt").read()))
+print(Plateau(open("plans/plan2.txt").read()))
     
 
 
