@@ -69,7 +69,7 @@ def poser_objet(plateau, objet, pos):
         objet (int): un entier représentant l'objet. const.AUCUN indique aucun objet
         pos (tuple): une paire (lig,col) de deux int
     """
-    plateau[pos] = objet
+    plateau[pos]["objet"] = objet
 
 def plateau_from_str(la_chaine):
     """Construit un plateau à partir d'une chaine de caractère contenant les informations
@@ -81,23 +81,22 @@ def plateau_from_str(la_chaine):
     Returns:
         dict: le plateau correspondant à la chaine. None si l'opération a échoué
     """
-    commence = False
     plateau = dict()
-    la_chaine = la_chaine.split("\n")
-    x = -1
-    y = -1
-    la_chaine = la_chaine[1::] # on omet la première ligne qui n'est pas matrice
-    for ligne in la_chaine:
-        y += 1
-        x = 0
-        for terme in ligne:
-            if terme == " ":
-                plateau[x, y] = case.Case()
-            else: 
-                plateau[x, y] = case.Case(True)
-            x += 1
+    lignes = la_chaine.split("\n")
+    lignes.pop(0)
+    l, c = 0, 0
+    for ligne in lignes:
+        for lettre in ligne:
+            if lettre == "#":
+                plateau[(l, c)] = case.Case(True)
+            else:
+                plateau[(l, c)] = case.Case(False, " ", joueurs_presents=set())
+            c += 1
+        l += 1
+        c = 0
     return plateau
 
+#print(plateau_from_str(open("cartes/carte.txt").read()))
 
 #le nombre de ligne est ici = y, et colonne = x 
 def Plateau(plan):
@@ -244,20 +243,7 @@ def deplacer_joueur(plateau, joueur, pos, direction):
 # fonctions d'observation du plateau
 #-----------------------------
 
-plateau = {
-    (0, 0): {
-        "couleur" : "A", 
-        "mur" : True,
-        "objet" : 1,
-        "joueurs_presents" : {"p", "a"},
-    },
-    (1, 1): {
-        "couleur" : "A", 
-        "mur" : True,
-        "objet" : 1,
-        "joueurs_presents" : {"p", "a"},
-    }
-}
+
 
 def surfaces_peintes(plateau, nb_joueurs):
     """retourne un dictionnaire indiquant le nombre de cases peintes pour chaque joueur.
@@ -297,10 +283,13 @@ def directions_possibles(plateau,pos):
     """
     liste = dict()
     for direction, pos2 in INC_DIRECTION.items():
-        new_pos = (pos2[0] + pos[0], pos2[1] + pos[1])
-        new_case = get_case(plateau, new_pos)
-        if case.est_mur(new_case) is False:
-            liste[direction] = case.get_couleur(new_case)
+        if direction != "X":
+            new_pos = (pos2[0] + pos[0], pos2[1] + pos[1])
+            if new_pos[0] >= 0 and new_pos[0] < get_nb_lignes(plateau) and new_pos[1] >= 0 and new_pos[1] < get_nb_colonnes(plateau):
+                print(new_pos)
+                new_case = get_case(plateau, new_pos)
+                if case.est_mur(new_case) is False:
+                    liste[direction] = case.get_couleur(new_case)
     return liste
 
     
@@ -315,16 +304,32 @@ def nb_joueurs_direction(plateau, pos, direction, distance_max):
     Returns:
         int: le nombre de joueurs à portée de peinture (ou qui risque de nous peindre)
     """
+
+    direction = INC_DIRECTION[direction]
     nb = 0
-    for direction, pos2 in INC_DIRECTION.items():
-        new_pos = (pos2[0] + pos[0], pos2[1] + pos[1])
-        new_case = get_case(plateau, new_pos)
-        if case.est_mur(new_case) is False:
-            for joueur in case.get_joueurs(new_case):
-                nb +=1
+    mur = False
+    for i in range(distance_max):
+        if pos[0] >= 0 and pos[0] < get_nb_lignes(plateau) and pos[1] >= 0 and pos[1] < get_nb_colonnes(plateau):
+            case_pl = get_case(plateau, pos)
+            if case.est_mur(case_pl):
+                mur = True
+            if mur is False:
+                for i2 in case.get_joueurs(case_pl):
+                    nb += 1
+
+        pos = (pos[0] + direction[0], pos[1] + direction[1])
     return nb
 
-    
+
+with open("plans/plan2.txt") as fic:
+    plan2=fic.read()
+
+p2 = Plateau(plan2)
+print(nb_joueurs_direction(p2, (2,1), 'N', 10))
+
+
+#print(Plateau(open("plans/plan2.txt").read()))
+
 def peindre(plateau, pos, direction, couleur, reserve, distance_max, peindre_murs=False):
     """ Peint avec la couleur les cases du plateau à partir de la position pos dans
         la direction indiquée en s'arrêtant au premier mur ou au bord du plateau ou
@@ -349,49 +354,44 @@ def peindre(plateau, pos, direction, couleur, reserve, distance_max, peindre_mur
     cout = 0
     nb_repeintes = 0
     nb_murs_repeints = 0
-    joueurs_touches = set
+    joueurs_touches = set()
         
-    positions = [pos]
-    d = INC_DIRECTION[direction]
+    positions = []
+    direction = INC_DIRECTION[direction]
+    mur = False
     for i in range(distance_max):
-        p = positions[-1]
-        new_pos = (p[0] + d[0], p[1] + d[1])
-        positions.append(new_pos)
-    
+        if pos[0] >= 0 and pos[0] < get_nb_lignes(plateau) and pos[1] >= 0 and pos[1] < get_nb_colonnes(plateau):
+
+            if case.est_mur(get_case(plateau, pos)):
+                mur = True
+                if peindre_murs:
+                    positions.append(pos)
+                    nb_murs_repeints += 1
+
+            if mur is False:
+                positions.append(pos)
+                pos = (pos[0] + direction[0], pos[1] + direction[1])
+
     for pos in positions:
         case_pl = get_case(plateau, pos)
+        if case.get_couleur(case_pl) == " ":
+            cout += 1
+            nb_repeintes += 1
+            case.peindre(case_pl, couleur)
+        elif case.get_couleur(case_pl) != couleur:
+            cout += 2
+            nb_repeintes += 1
+            case.peindre(case_pl, couleur)
+        else:
+            cout += 1
+            nb_repeintes += 1
 
-        stop = True
-        if 0 <= case_pl[0] < get_nb_lignes(plateau):
-            if 0 <= case_pl[1] < get_nb_colonnes(plateau):
-                if case.est_mur(case_pl) is False:
+        for joueur in case.get_joueurs(case_pl):
+            joueurs_touches.add(joueur)
 
-                    stop = False
-
-                    if couleur == case.get_couleur(case_pl):
-                        cout +=1 
-                    else:
-                        cout += 2
-
-                    nb_repeintes += 1
-
-                    for joueur in case.get_joueurs(case_pl):
-                        joueurs_touches.add(joueur)
-
-                else:
-                    stop = True
-                    nb_murs_repeints += 1
-        if stop:
-            return {
-                "cout": cout,
-                "nb_repeintes": nb_repeintes, 
-                "nb_murs_repeints": nb_murs_repeints,
-                "joueurs_touches": joueurs_touches
-            }
     return {
         "cout": cout,
         "nb_repeintes": nb_repeintes, 
         "nb_murs_repeints": nb_murs_repeints,
         "joueurs_touches": joueurs_touches
     }
-
