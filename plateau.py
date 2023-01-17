@@ -11,6 +11,7 @@ INC_DIRECTION = {'N': (-1, 0), 'E': (0, 1), 'S': (1, 0),
 
 # plateau = { (0, 0) : ' ', (0,1) : ' ', (0, 2) : ' '}
 
+
 def get_nb_lignes(plateau):
     """retourne le nombre de lignes du plateau
 
@@ -320,14 +321,6 @@ def nb_joueurs_direction(plateau, pos, direction, distance_max):
         pos = (pos[0] + direction[0], pos[1] + direction[1])
     return nb
 
-
-with open("plans/plan2.txt") as fic:
-    plan2=fic.read()
-
-p2 = Plateau(plan2)
-print(nb_joueurs_direction(p2, (2,1), 'N', 10))
-
-
 #print(Plateau(open("plans/plan2.txt").read()))
 
 def peindre(plateau, pos, direction, couleur, reserve, distance_max, peindre_murs=False):
@@ -355,58 +348,76 @@ def peindre(plateau, pos, direction, couleur, reserve, distance_max, peindre_mur
     nb_repeintes = 0
     nb_murs_repeints = 0
     joueurs_touches = set()
-
-    cases = []
-    murs = []
     direction = INC_DIRECTION[direction]
+    nb = 0
     stop = False
+    while nb < distance_max and stop is False:
+        if pos[0] < 0 or pos[0] >= get_nb_lignes(plateau) or pos[1] < 0 or pos[1] >= get_nb_colonnes(plateau):
+            stop = True
 
-    for i in range(distance_max):
+        elif case.est_mur(get_case(plateau, pos)) and peindre_murs is False:
+            stop = True
 
-        if pos[0] >= 0 and pos[0] < get_nb_lignes(plateau) and pos[1] >= 0 and pos[1] < get_nb_colonnes(plateau):   
-            if case.est_mur(get_case(plateau, pos)):
-                stop = True
-                if peindre_murs:
-                    murs.append(pos)
-                    pos = (pos[0] + direction[0], pos[1] + direction[1])
+        elif case.est_mur(get_case(plateau, pos)) and peindre_murs:
+            case_pl = get_case(plateau, pos)
+            if case.get_couleur(case_pl) == " " and (reserve-1) >= 0:
+                cout += 1
+                nb_murs_repeints += 1
+                nb_repeintes += 1
+                reserve -= 1
+                case.peindre(case_pl, couleur.lower())
 
-            elif stop is False:
-                cases.append(pos)
-                pos = (pos[0] + direction[0], pos[1] + direction[1])
+            elif case.get_couleur(case_pl) != couleur and (reserve-2) >= 0:
+                cout += 2
+                nb_murs_repeints += 1
+                reserve -= 2
+                nb_repeintes += 1
+                case.peindre(case_pl, couleur.lower())
 
-    for mur in murs:
-        case_pl = get_case(plateau, mur)
-        if case.get_couleur(case_pl) == " ":
-            cout += 1
-            nb_murs_repeints += 1
-            nb_repeintes += 1
-            case.peindre(case_pl, couleur)
+            elif (reserve-1) >= 0:
+                reserve -= 1
+                cout += 1
 
-        elif case.get_couleur(case_pl) != couleur:
-            cout += 2
-            nb_murs_repeints += 1
-            nb_repeintes += 1
-            case.peindre(case_pl, couleur)
-
-    for pos in cases:
-        case_pl = get_case(plateau, pos)
-        if case.get_couleur(case_pl) == " ":
-            cout += 1
-            nb_repeintes += 1
-            case.peindre(case_pl, couleur)
-        elif case.get_couleur(case_pl) != couleur:
-            cout += 2
-            nb_repeintes += 1
-            case.peindre(case_pl, couleur)
         else:
-            cout += 1
+            case_pl = get_case(plateau, pos)
+            if case.get_couleur(case_pl) == " " and (reserve-1) >= 0:
+                cout += 1
+                nb_repeintes += 1
+                reserve -= 1
+                case.peindre(case_pl, couleur)
 
-        for joueur in case.get_joueurs(case_pl):
-            joueurs_touches.add(joueur)
+            elif case.get_couleur(case_pl) != couleur and (reserve-2) >= 0:
+                cout += 2
+                nb_repeintes += 1
+                reserve -= 2
+                case.peindre(case_pl, couleur)
 
-    return {
+            elif (reserve-1) >= 0:
+                reserve -=1
+                cout += 1
+
+            for joueur in case.get_joueurs(case_pl):
+                joueurs_touches.add(joueur)
+
+        nb += 1
+        pos = (pos[0] + direction[0], pos[1] + direction[1])
+
+    res = {
         "cout": cout,
         "nb_repeintes": nb_repeintes, 
         "nb_murs_repeints": nb_murs_repeints,
         "joueurs_touches": joueurs_touches
     }
+    return res
+
+
+
+
+
+with open("plans/plan1.txt") as fic:
+    plan2=fic.read()
+
+p2=Plateau(plan2)
+print(peindre(p2,(0,1),'S','A',10,25,True))
+                
+#{"cout": 10, "nb_repeintes": 9, "nb_murs_repeints": 1, "joueurs_touches": {'A'}})
