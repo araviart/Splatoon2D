@@ -20,9 +20,9 @@ def get_nb_lignes(plateau):
     Returns:
         int: le nombre de lignes du plateau
     """
-    return max(plateau.keys())[0]+1
-
-
+    def ligne(tuple):
+        return tuple[0]
+    return max(plateau, key=ligne)[0]+1
 
 def get_nb_colonnes(plateau):
     """retourne le nombre de colonnes du plateau
@@ -33,7 +33,9 @@ def get_nb_colonnes(plateau):
     Returns:
         int: le nombre de colonnes du plateau
     """
-    return max(plateau.keys())[1]+1
+    def colonne(tuple):
+        return tuple[1]
+    return max(plateau, key=colonne)[1]+1
 
 
 def get_case(plateau, pos):
@@ -56,7 +58,7 @@ def poser_joueur(plateau, joueur, pos):
         joueur (str): la lettre représentant le joueur
         pos (tuple): une paire (lig,col) de deux int
     """
-    plateau[pos] = joueur
+    plateau[pos] = case.Case(joueurs_presents=joueur)
 
 def poser_objet(plateau, objet, pos):
     """Pose un objet en position pos sur le plateau. Si cette case contenait déjà
@@ -81,27 +83,23 @@ def plateau_from_str(la_chaine):
     """
     commence = False
     plateau = dict()
-    x = 0
-    y = 0
-    for carac in la_chaine:
-        if carac == "\n" and commence is False:
-            commence = True
-
-        if commence:
-            if carac == " ":
-                plateau[(x, y)] = case.Case()
-            else:
-                plateau[(x, y)] = case.Case(True)
+    la_chaine = la_chaine.split("\n")
+    x = -1
+    y = -1
+    la_chaine = la_chaine[1::] # on omet la première ligne qui n'est pas matrice
+    for ligne in la_chaine:
+        y += 1
+        x = 0
+        for terme in ligne:
+            if terme == " ":
+                plateau[x, y] = case.Case()
+            else: 
+                plateau[x, y] = case.Case(True)
             x += 1
-
-        if carac == "\n" and commence:
-            y += 1
-            x = 0
-
     return plateau
 
-print(plateau_from_str("12;12\n ##  #  ##  #\n  #   #    #  \n #  ##  #### \n #           \n #   #  #  ##\n # #    ##  #\n   # #     ##\n #     ###  #\n #   #  #   #\n #   #  ##  #\n   # #     ##\n #     ###  #\n "))
-    
+
+#le nombre de ligne est ici = y, et colonne = x 
 def Plateau(plan):
     """Créer un plateau en respectant le plan donné en paramètre.
         Le plan est une chaine de caractères contenant
@@ -115,6 +113,42 @@ def Plateau(plan):
     Returns:
         dict: Le plateau correspondant au plan
     """
+    les_lignes=plan.split("\n")
+    [nb_lignes,nb_colonnes]=les_lignes[0].split(";")
+
+    plateau = dict()
+    lignes = plan.split("\n")
+    lignes.pop(0)
+    l, c = 0, 0
+    for ligne in lignes:
+        if l < int(nb_lignes):
+            for lettre in ligne:
+                if lettre == "#":
+                    plateau[(l, c)] = case.Case(True)
+                elif lettre == " ":
+                    plateau[(l, c)] = case.Case(False, " ", joueurs_presents=set())
+                elif lettre in "abcdefg":
+                    plateau[(l, c)] = case.Case(True, lettre)
+                elif lettre in "ABCDEFG":
+                    plateau[(l, c)] = case.Case(False, lettre, joueurs_presents=set())
+                c += 1
+            l += 1
+            c = 0
+    joueurs = lignes[l:]
+    for elem in joueurs:
+        if len(elem) > 2:
+            p = elem.split(";")
+            l = int(p[1])
+            c = int(p[2])
+            case_pl = get_case(plateau, (l, c))
+            if p[0].isalpha():
+                case.poser_joueur(case_pl, p[0])
+            else:
+                case.poser_objet(case_pl, int(p[0]))
+
+    return plateau
+
+#print(Plateau(open("plans/plan1.txt").read()))
     
 
 
@@ -126,10 +160,7 @@ def set_case(plateau, pos, une_case):
         pos (tuple): une paire (lig,col) de deux int
         une_case (dict): la nouvelle case
     """
-    ...
-
-
-
+    plateau[pos] = une_case
 
 def enlever_joueur(plateau, joueur, pos):
     """enlève un joueur qui se trouve en position pos sur le plateau
@@ -142,10 +173,12 @@ def enlever_joueur(plateau, joueur, pos):
     Returns:
         bool: True si l'opération s'est bien déroulée, False sinon
     """
-    ...
-
-
-
+    #return plateau[pos]["joueurs_presents"].remove(pos)
+    if joueur in case.get_joueurs(plateau[pos]):
+        case.get_joueurs(plateau[pos]).remove(joueur)
+        return True
+    else:
+        return False
 
 def prendre_objet(plateau, pos):
     """Prend l'objet qui se trouve en position pos du plateau et retourne l'entier
@@ -159,7 +192,10 @@ def prendre_objet(plateau, pos):
         int: l'entier représentant l'objet qui se trouvait sur la case.
         const.AUCUN indique aucun objet
     """
-    ...
+    res = case.get_objet(plateau[pos])
+    if case.get_objet(plateau[pos]) != const.AUCUN:
+        plateau[pos]["objet"] = 0
+    return res
 
 def deplacer_joueur(plateau, joueur, pos, direction):
     """Déplace dans la direction indiquée un joueur se trouvant en position pos
@@ -183,7 +219,25 @@ def deplacer_joueur(plateau, joueur, pos, direction):
             - une paire (lig,col) indiquant la position d'arrivée du joueur (None si
                 le joueur n'a pas pu se déplacer)
     """
-    ...
+    #securité pour validité du déplacement
+    nb_lignes  = get_nb_lignes(plateau)
+    nb_colonnes = get_nb_colonnes(plateau)
+    # déplacement 
+    new_direc = None
+    if direction == "N":
+        new_direc = pos[0]+INC_DIRECTION['N'][0], pos[1]+INC_DIRECTION['N'][1]
+    elif direction == 'E':
+        new_direc = pos[0]+INC_DIRECTION['E'][0], pos[1]+INC_DIRECTION['E'][1]
+    elif direction == 'S':
+        new_direc = pos[0]+INC_DIRECTION['S'][0], pos[1]+INC_DIRECTION['S'][1]
+    elif direction == 'X':
+        new_direc = pos[0]+INC_DIRECTION['X'][0], pos[1]+INC_DIRECTION['X'][1]
+    # validité du déplacement 
+    if new_direc[1] < nb_lignes and new_direc[0] < nb_colonnes:
+        pass
+    
+
+    
 
 
 #-----------------------------

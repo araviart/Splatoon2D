@@ -24,7 +24,6 @@ def Case(mur=False, couleur=' ', objet=const.AUCUN, joueurs_presents=None):
         "objet" : objet,
         "joueurs_presents" : joueurs_presents, }
 
-
 def est_mur(case):
     """indique si la case est un mur ou non
 
@@ -75,7 +74,7 @@ def get_joueurs(case):
     """
     if case['joueurs_presents'] is None:
         return set()
-    return set(case['joueurs_presents'])
+    return case['joueurs_presents']
 
 
 
