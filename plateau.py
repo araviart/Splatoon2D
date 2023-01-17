@@ -144,7 +144,7 @@ def Plateau(plan):
             else:
                 case.poser_objet(case_pl, int(p[0]))
     return plateau
-#print(Plateau(open("plans/plan1.txt").read()))
+print(Plateau(open("plans/plan1.txt").read()))
     
 def set_case(plateau, pos, une_case):
     """remplace la case qui se trouve en position pos du plateau par une_case
@@ -337,8 +337,6 @@ p2 = Plateau(plan2)
 print(nb_joueurs_direction(p2, (2,1), 'N', 10))
 
 
-
-    
 def peindre(plateau, pos, direction, couleur, reserve, distance_max, peindre_murs=False):
     """ Peint avec la couleur les cases du plateau à partir de la position pos dans
         la direction indiquée en s'arrêtant au premier mur ou au bord du plateau ou
@@ -364,62 +362,70 @@ def peindre(plateau, pos, direction, couleur, reserve, distance_max, peindre_mur
     nb_repeintes = 0
     nb_murs_repeints = 0
     joueurs_touches = set()
-
-    cases = []
-    murs = []
     direction = INC_DIRECTION[direction]
+    nb = 0
     stop = False
+    while nb < distance_max and stop is False:
+        if pos[0] < 0 or pos[0] >= get_nb_lignes(plateau) or pos[1] < 0 or pos[1] >= get_nb_colonnes(plateau):
+            stop = True
 
-    for i in range(distance_max):
+        elif case.est_mur(get_case(plateau, pos)) and peindre_murs is False:
+            stop = True
 
-        if pos[0] >= 0 and pos[0] < get_nb_lignes(plateau) and pos[1] >= 0 and pos[1] < get_nb_colonnes(plateau):   
-            if case.est_mur(get_case(plateau, pos)):
-                stop = True
-                if peindre_murs:
-                    murs.append(pos)
-                    pos = (pos[0] + direction[0], pos[1] + direction[1])
-            elif stop is False or peindre_murs:
-                cases.append(pos)
-                pos = (pos[0] + direction[0], pos[1] + direction[1])
-    for mur in murs:
-        case_pl = get_case(plateau, mur)
-        if case.get_couleur(case_pl) == " ":
-            cout += 1
-            if reserve - cout >= 0:
+        elif case.est_mur(get_case(plateau, pos)) and peindre_murs:
+            case_pl = get_case(plateau, pos)
+            if case.get_couleur(case_pl) == " " and (reserve-1) >= 0:
+                cout += 1
                 nb_murs_repeints += 1
                 nb_repeintes += 1
-                case.peindre(case_pl, couleur)
+                reserve -= 1
+                case.peindre(case_pl, couleur.lower())
 
-        elif case.get_couleur(case_pl) != couleur:
-            cout += 2
-            if reserve - cout >= 0:
+            elif case.get_couleur(case_pl) != couleur and (reserve-2) >= 0:
+                cout += 2
                 nb_murs_repeints += 1
+                reserve -= 2
                 nb_repeintes += 1
-                case.peindre(case_pl, couleur)
+                case.peindre(case_pl, couleur.lower())
+            elif (reserve-2) >= 0: # si la case mur est de la même couleur que lui
+                reserve -=2
+                cout += 1
 
-    for pos in cases:
-        case_pl = get_case(plateau, pos)
-        if case.get_couleur(case_pl) == " ":
-            if reserve - cout >= 0:
+
+        else:
+            case_pl = get_case(plateau, pos)
+            if case.get_couleur(case_pl) == " " and (reserve-1) >= 0:
                 cout += 1
                 nb_repeintes += 1
+                reserve -= 1
                 case.peindre(case_pl, couleur)
-        elif case.get_couleur(case_pl) != couleur:
-            if reserve - cout >= 0:
+
+            elif case.get_couleur(case_pl) != couleur and (reserve-2) >= 0:
                 cout += 2
                 nb_repeintes += 1
+                reserve -= 2
                 case.peindre(case_pl, couleur)
-        else:
-            cout += 1
 
-        for joueur in case.get_joueurs(case_pl):
-            joueurs_touches.add(joueur)
+            elif (reserve-2) >= 0: # si la case non mur est de la même couleur que lui
+                reserve -=2
+                cout += 1
 
-    return {
+            else:
+                stop = True
+
+            if stop is False:
+                for joueur in case.get_joueurs(case_pl):
+                    joueurs_touches.add(joueur)
+
+        nb += 1
+        pos = (pos[0] + direction[0], pos[1] + direction[1])
+
+    res = {
         "cout": cout,
         "nb_repeintes": nb_repeintes, 
         "nb_murs_repeints": nb_murs_repeints,
         "joueurs_touches": joueurs_touches
     }
+    return res
 
-print(peindre((Plateau(open("plans/plan2.txt").read())), (0,1), 'S', 'A', 50, 10, True))
+print(peindre((Plateau(open("plans/plan2.txt").read())), (10,13), 'N', 'D', 9, 10, True))
