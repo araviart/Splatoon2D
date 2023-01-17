@@ -20,9 +20,9 @@ def get_nb_lignes(plateau):
     Returns:
         int: le nombre de lignes du plateau
     """
-    abs_y = [y for x, y in plateau.keys()]
-    max_y = max(abs_y)
-    return max_y+1 #ou sans +1 a test
+    def ligne(tuple):
+        return tuple[0]
+    return max(plateau, key=ligne)[0]+1
 
 def get_nb_colonnes(plateau):
     """retourne le nombre de colonnes du plateau
@@ -113,22 +113,22 @@ def Plateau(plan):
         dict: Le plateau correspondant au plan
     """
     les_lignes=plan.split("\n")
-    [nb_lignes,nb_colonnes]=les_lignes[0].split(";")
+    [nb_lignes,nb_colonnes]=les_lignes[0].split(";") # on a besoin de nb_lignes (ou nb_colonnes) (> ne pas dépasser les lignes matrice du txt -> 1er for)
 
     plateau = dict()
     lignes = plan.split("\n")
-    lignes.pop(0)
+    lignes.pop(0) # on omet la ligne déjà vue avant
     l, c = 0, 0
     for ligne in lignes:
-        if l < int(nb_lignes):
+        if l < int(nb_lignes): # si ligne est inférieur à nb_lignes (< car nb_lignes commencent à 1) 
             for lettre in ligne:
                 if lettre == "#":
                     plateau[(l, c)] = case.Case(True)
                 elif lettre == " ":
                     plateau[(l, c)] = case.Case(False, " ", joueurs_presents=set())
-                elif lettre in "abcdefg":
+                elif lettre.isalpha() and lettre.islower():
                     plateau[(l, c)] = case.Case(True, lettre)
-                elif lettre in "ABCDEFG":
+                elif lettre.isalpha() and lettre.isupper():
                     plateau[(l, c)] = case.Case(False, lettre, joueurs_presents=set())
                 c += 1
             l += 1
@@ -137,8 +137,9 @@ def Plateau(plan):
     for elem in joueurs:
         if len(elem) > 2:
             p = elem.split(";")
-            l = int(p[1])
-            c = int(p[2])
+            #l = int(p[1])
+            #c = int(p[2])
+            l, c = int(p[1]), int(p[2])
             case_pl = get_case(plateau, (l, c))
             if p[0].isalpha():
                 case.poser_joueur(case_pl, p[0])
@@ -147,7 +148,7 @@ def Plateau(plan):
 
     return plateau
 
-print(Plateau(open("plans/plan2.txt").read()))
+print(Plateau(open("plans/plan1.txt").read()))
     
 
 
@@ -159,10 +160,7 @@ def set_case(plateau, pos, une_case):
         pos (tuple): une paire (lig,col) de deux int
         une_case (dict): la nouvelle case
     """
-    ...
-
-
-
+    plateau[pos] = une_case
 
 def enlever_joueur(plateau, joueur, pos):
     """enlève un joueur qui se trouve en position pos sur le plateau
@@ -175,10 +173,12 @@ def enlever_joueur(plateau, joueur, pos):
     Returns:
         bool: True si l'opération s'est bien déroulée, False sinon
     """
-    ...
-
-
-
+    #return plateau[pos]["joueurs_presents"].remove(pos)
+    if joueur in case.get_joueurs(plateau[pos]):
+        case.get_joueurs(plateau[pos]).remove(joueur)
+        return True
+    else:
+        return False
 
 def prendre_objet(plateau, pos):
     """Prend l'objet qui se trouve en position pos du plateau et retourne l'entier
@@ -192,7 +192,10 @@ def prendre_objet(plateau, pos):
         int: l'entier représentant l'objet qui se trouvait sur la case.
         const.AUCUN indique aucun objet
     """
-    ...
+    res = case.get_objet(plateau[pos])
+    if case.get_objet(plateau[pos]) != const.AUCUN:
+        plateau[pos]["objet"] = 0
+    return res
 
 def deplacer_joueur(plateau, joueur, pos, direction):
     """Déplace dans la direction indiquée un joueur se trouvant en position pos
@@ -216,7 +219,45 @@ def deplacer_joueur(plateau, joueur, pos, direction):
             - une paire (lig,col) indiquant la position d'arrivée du joueur (None si
                 le joueur n'a pas pu se déplacer)
     """
-    ...
+    #securité pour validité du déplacement
+    valeurs = None 
+    nb_lignes  = get_nb_lignes(plateau)
+    nb_colonnes = get_nb_colonnes(plateau) 
+    deplacement = False # False par défaut pour première conditions
+    new_direc = None
+    if direction == "N":
+        new_direc = pos[0]+INC_DIRECTION['N'][0], pos[1]+INC_DIRECTION['N'][1]
+    elif direction == 'E':
+        new_direc = pos[0]+INC_DIRECTION['E'][0], pos[1]+INC_DIRECTION['E'][1]
+    elif direction == 'S':
+        new_direc = pos[0]+INC_DIRECTION['S'][0], pos[1]+INC_DIRECTION['S'][1]
+    elif direction == 'O':
+        new_direc = pos[0]+INC_DIRECTION['O'][0], pos[1]+INC_DIRECTION['O'][1]
+    elif direction == 'X':
+        new_direc = pos[0]+INC_DIRECTION['X'][0], pos[1]+INC_DIRECTION['X'][1]
+    # validité du déplacement 
+    if new_direc[1] < nb_lignes and new_direc[0] < nb_colonnes and new_direc[1] >= 0 and new_direc[0] >= 0: # on ne dépasse pas la matrice
+        if case.get_joueurs(plateau[pos]) == set(joueur):
+            if not case.est_mur(plateau[new_direc]): 
+                deplacement = True
+        # identité de la case
+        if get_case(plateau, new_direc)["couleur"] == joueur:
+            valeurs = 1
+        elif get_case(plateau, new_direc)["couleur"] == " ":
+            valeurs = 0
+        elif get_case(plateau, new_direc)["couleur"] != " ":
+            valeurs = -1
+        # gestion objet
+        objet = case.get_objet(plateau[new_direc])
+        prendre_objet(plateau, new_direc)
+        if deplacement:
+            poser_joueur(plateau, joueur, new_direc)
+            enlever_joueur(plateau, joueur, pos)
+        deplacement_tuple = (deplacement, valeurs, objet, new_direc)
+        return deplacement_tuple
+    return (deplacement, valeurs, objet, None)
+print(deplacer_joueur(Plateau(open("plans/plan1.txt").read()),'A',(1,1), 'N'))
+    
 
 
 #-----------------------------
@@ -234,16 +275,22 @@ def surfaces_peintes(plateau, nb_joueurs):
         dict: un dictionnaire dont les clées sont les identifiants joueurs et les
             valeurs le nombre de cases peintes par le joueur
     """
+    liste_tout_joueur = set()
     joueurs = dict()
     for pos, valeur in plateau.items():
         couleur = case.get_couleur(valeur)
-        if couleur in joueurs.keys():
-            joueurs[couleur] +=1
-        else:
-            joueurs[couleur] = 1
-
+        if couleur != ' ':
+            couleur = couleur.upper()
+            if couleur in joueurs.keys():
+                joueurs[couleur] +=1
+            else:
+                joueurs[couleur] = 1
+            liste_tout_joueur.add(couleur)
+        case_pl = get_case(plateau, pos)
+        for joueur in case.get_joueurs(case_pl):
+            if joueur not in joueurs.keys():
+                joueurs[joueur] = 0
     return joueurs
-
 
     
 def directions_possibles(plateau,pos):
@@ -267,9 +314,6 @@ def directions_possibles(plateau,pos):
             liste[direction] = case.get_couleur(new_case)
     return liste
 
-
-
-
     
 def nb_joueurs_direction(plateau, pos, direction, distance_max):
     """indique combien de joueurs se trouve à portée sans protection de mur.
@@ -290,7 +334,6 @@ def nb_joueurs_direction(plateau, pos, direction, distance_max):
             for joueur in case.get_joueurs(new_case):
                 nb +=1
     return nb
-
 
     
 def peindre(plateau, pos, direction, couleur, reserve, distance_max, peindre_murs=False):
@@ -314,5 +357,48 @@ def peindre(plateau, pos, direction, couleur, reserve, distance_max, peindre_mur
                 "nb_murs_repeints": un entier indiquant le nombre de murs qui ont changé de couleur
                 "joueurs_touches": un ensemble (set) indiquant les joueurs touchés lors de l'action
     """
-    ...
+    cout = 0
+    nb_repeintes = 0
+    nb_murs_repeints = 0
+    joueurs_touches = set()
+        
+    positions = [pos]
+    d = INC_DIRECTION[direction]
+    for i in range(distance_max):
+        p = positions[-1]
+        new_pos = (p[0] + d[0], p[1] + d[1])
+        positions.append(new_pos)
+    
+    for pos in positions:
+        case_pl = get_case(plateau, pos)
+        stop = True
+        if 0 <= case_pl[0] < get_nb_lignes(plateau):
+            if 0 <= case_pl[1] < get_nb_colonnes(plateau):
+                if case.est_mur(case_pl) is False:
+                    stop = False
+                    if couleur == case.get_couleur(case_pl):
+                        cout +=1 
+                    else:
+                        cout += 2
+                    if reserve-cout < 0:
+                        stop = False
+                    nb_repeintes += 1
+                    for joueur in case.get_joueurs(case_pl):
+                        joueurs_touches.add(joueur)
+                else:
+                    stop = True
+                    nb_murs_repeints += 1
+        if stop:
+            return {
+                "cout": cout,
+                "nb_repeintes": nb_repeintes, 
+                "nb_murs_repeints": nb_murs_repeints,
+                "joueurs_touches": joueurs_touches
+            }
+    return {
+        "cout": cout,
+        "nb_repeintes": nb_repeintes, 
+        "nb_murs_repeints": nb_murs_repeints,
+        "joueurs_touches": joueurs_touches
+    }
 
