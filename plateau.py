@@ -378,7 +378,6 @@ def peindre(plateau, pos, direction, couleur, reserve, distance_max, peindre_mur
                 if peindre_murs:
                     murs.append(pos)
                     pos = (pos[0] + direction[0], pos[1] + direction[1])
-
             elif stop is False or peindre_murs:
                 cases.append(pos)
                 pos = (pos[0] + direction[0], pos[1] + direction[1])
@@ -423,4 +422,4 @@ def peindre(plateau, pos, direction, couleur, reserve, distance_max, peindre_mur
         "joueurs_touches": joueurs_touches
     }
 
-print(peindre((Plateau(open("plans/plan2.txt").read())), (0,1), 'S', 'A', 10, 25, True))
+print(peindre((Plateau(open("plans/plan2.txt").read())), (0,1), 'S', 'A', 50, 10, True))
