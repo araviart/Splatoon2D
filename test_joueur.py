@@ -99,7 +99,7 @@ class test_joueur(unittest.TestCase):
         joueur.maj_duree(le_joueur)
         self.assertEqual(joueur.get_objet(le_joueur),0)
         self.assertEqual(joueur.get_duree(le_joueur),0)
-
+        
         le_joueur=joueur.joueur_from_str(self.chaine2)
         joueur.maj_duree(le_joueur)
         self.assertEqual(joueur.get_objet(le_joueur),1)
