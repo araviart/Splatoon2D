@@ -7,7 +7,7 @@ class test_case(unittest.TestCase):
         with open("plans/plan1.txt") as fic:
             self.plan1=fic.read()
         with open("plans/plan2.txt") as fic:
-            self.plan1=fic.read()
+            self.plan2=fic.read()
     
     def verif(self,plan,le_plateau):
         les_lignes=plan.split("\n")

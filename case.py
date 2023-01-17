@@ -25,8 +25,6 @@ def Case(mur=False, couleur=' ', objet=const.AUCUN, joueurs_presents=None):
         "objet" : objet,
         "joueurs_presents" : joueurs_presents, }
 
-print(Case(mur=False, couleur=' ', objet=const.AUCUN, joueurs_presents=None))
-
 def est_mur(case):
     """indique si la case est un mur ou non
 
@@ -77,7 +75,7 @@ def get_joueurs(case):
     """
     if case['joueurs_presents'] is None:
         return set()
-    return set(case['joueurs_presents'])
+    return case['joueurs_presents']
 
 
 
@@ -107,7 +105,6 @@ def peindre(case, couleur):
         set: l'ensemble des identifiants des joueurs présents sur la carte
     """
     case['couleur'] = couleur
-    print(case['couleur'])
     return get_joueurs(case) 
     
 def laver(case):
