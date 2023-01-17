@@ -20,9 +20,9 @@ def get_nb_lignes(plateau):
     Returns:
         int: le nombre de lignes du plateau
     """
-    return max(plateau.keys())[0]+1
-
-
+    abs_y = [y for x, y in plateau.keys()]
+    max_y = max(abs_y)
+    return max_y+1 #ou sans +1 a test
 
 def get_nb_colonnes(plateau):
     """retourne le nombre de colonnes du plateau
@@ -33,7 +33,9 @@ def get_nb_colonnes(plateau):
     Returns:
         int: le nombre de colonnes du plateau
     """
-    return max(plateau.keys())[1]+1
+    ordo_y = [x for x, y in plateau.keys()]
+    max_x = max(ordo_y)
+    return max_x+1 #ou sans +1 a test
 
 
 def get_case(plateau, pos):
@@ -56,7 +58,7 @@ def poser_joueur(plateau, joueur, pos):
         joueur (str): la lettre représentant le joueur
         pos (tuple): une paire (lig,col) de deux int
     """
-    plateau[pos] = joueur
+    plateau[pos] = case.Case(joueurs_presents=joueur)
 
 def poser_objet(plateau, objet, pos):
     """Pose un objet en position pos sur le plateau. Si cette case contenait déjà
@@ -81,20 +83,22 @@ def plateau_from_str(la_chaine):
     """
     plateau = dict()
     la_chaine = la_chaine.split("\n")
-    [nb_lignes,nb_colonnes]=(la_chaine[0], la_chaine[1])
-    nb_colonnes=int(nb_colonnes)
     x = -1
     y = -1
-    while x <= nb_lignes and y <= nb_colonnes:
-        if x == -1 and y ==-1:
-            pass
-        for ligne in la_chaine:
-            y += 1
-            for terme in ligne:
-                x += 1
-                plateau[x, y] = terme
+    la_chaine = la_chaine[1::] # on omet la première ligne qui n'est pas matrice
+    for ligne in la_chaine:
+        y += 1
+        x = 0
+        for terme in ligne:
+            if terme == " ":
+                plateau[x, y] = case.Case()
+            else: 
+                plateau[x, y] = case.Case(True)
+            x += 1
     return plateau
 
+
+#le nombre de ligne est ici = y, et colonne = x 
 def Plateau(plan):
     """Créer un plateau en respectant le plan donné en paramètre.
         Le plan est une chaine de caractères contenant
@@ -108,6 +112,44 @@ def Plateau(plan):
     Returns:
         dict: Le plateau correspondant au plan
     """
+    plateau = dict()
+    le_plan = plan.split("\n")
+    le_plan_l_c = str(le_plan[0]).split(';')
+    [nb_colonnes, nb_lignes] = le_plan_l_c[0], le_plan_l_c[1]
+    nb_colonnes = int(nb_colonnes)
+    nb_lignes = int(nb_lignes)
+    le_plan = le_plan[1:] # on omet le première ligne 4;6
+    y = -1
+    for ligne in le_plan:
+        y += 1
+        x = 0
+        if y != nb_colonnes:
+            for terme in ligne:
+                if terme == " ":
+                    plateau[x, y] = case.Case()
+                elif terme in "abcd":
+                    plateau[x, y] = case.Case(True, terme)
+                elif terme in "ABCD":
+                    plateau[x, y] = case.Case(False, terme)
+                else:
+                    plateau[x, y] = case.Case(True, terme)
+                x += 1
+        else:
+            break
+    le_plan_new = le_plan[nb_colonnes:]
+    # traitement des lignes 
+    for ligne in le_plan_new:
+        ligne_val_x_y = ligne.split(";")
+        if len(ligne_val_x_y) > 1:
+            if str((ligne_val_x_y[0])).isalpha():
+                plateau[int(ligne_val_x_y[2]),int(ligne_val_x_y[1])] = case.Case(False, couleur = ligne_val_x_y[0], joueurs_presents=True)
+            else:
+                plateau[int(ligne_val_x_y[2]),int(ligne_val_x_y[1])] = case.Case(False, objet=ligne_val_x_y[0])
+    return plateau
+
+print(get_nb_lignes(Plateau((open("plans/plan2.txt").read()))))
+print(get_nb_colonnes(Plateau((open("plans/plan2.txt").read()))))
+print(Plateau(open("plans/plan1.txt").read()))
     
 
 
