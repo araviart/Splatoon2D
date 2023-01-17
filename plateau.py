@@ -80,21 +80,9 @@ def plateau_from_str(la_chaine):
     Returns:
         dict: le plateau correspondant à la chaine. None si l'opération a échoué
     """
-    plateau = dict()
-    la_chaine = la_chaine.split("\n")
-    x = -1
-    y = -1
-    la_chaine = la_chaine[1::] # on omet la première ligne qui n'est pas matrice
-    for ligne in la_chaine:
-        y += 1
-        x = 0
-        for terme in ligne:
-            if terme == " ":
-                plateau[x, y] = case.Case()
-            else: 
-                plateau[x, y] = case.Case(True)
-            x += 1
-    return plateau
+    # https://celene.univ-orleans.fr/mod/forum/discuss.php?d=64187:
+    # Dans l'API plateau.py les fonction Plateau() et plateau_from_str() sont les mêmes en réalité. 
+    # Inutile de faire l'implémentation de plateau_from_str()
 
 
 #le nombre de ligne est ici = y, et colonne = x 
