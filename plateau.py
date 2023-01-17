@@ -236,7 +236,16 @@ def surfaces_peintes(plateau, nb_joueurs):
         dict: un dictionnaire dont les clées sont les identifiants joueurs et les
             valeurs le nombre de cases peintes par le joueur
     """
-    ...
+    joueurs = dict()
+    for pos, valeur in plateau.items():
+        couleur = case.get_couleur(valeur)
+        if couleur in joueurs.keys():
+            joueurs[couleur] +=1
+        else:
+            joueurs[couleur] = 1
+
+    return joueurs
+
 
     
 def directions_possibles(plateau,pos):
@@ -252,7 +261,16 @@ def directions_possibles(plateau,pos):
               de la case d'arrivée si on prend cette direction
               à partir de pos
     """
-    ...
+    liste = dict()
+    for direction, pos2 in INC_DIRECTION.items():
+        new_pos = (pos2[0] + pos[0], pos2[1] + pos[1])
+        new_case = get_case(plateau, new_pos)
+        if case.est_mur(new_case) is False:
+            liste[direction] = case.get_couleur(new_case)
+    return liste
+
+
+
 
     
 def nb_joueurs_direction(plateau, pos, direction, distance_max):
@@ -266,7 +284,15 @@ def nb_joueurs_direction(plateau, pos, direction, distance_max):
     Returns:
         int: le nombre de joueurs à portée de peinture (ou qui risque de nous peindre)
     """
-    ...
+    nb = 0
+    for direction, pos2 in INC_DIRECTION.items():
+        new_pos = (pos2[0] + pos[0], pos2[1] + pos[1])
+        new_case = get_case(plateau, new_pos)
+        if case.est_mur(new_case) is False:
+            for joueur in case.get_joueurs(new_case):
+                nb +=1
+    return nb
+
 
     
 def peindre(plateau, pos, direction, couleur, reserve, distance_max, peindre_murs=False):
