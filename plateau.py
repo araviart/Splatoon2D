@@ -3,8 +3,6 @@
 import const
 import case
 
-# dictionnaire permettant d'associer une direction et la position relative
-# de la case qui se trouve dans cette direction
 INC_DIRECTION = {'N': (-1, 0), 'E': (0, 1), 'S': (1, 0),
                  'O': (0, -1), 'X': (0, 0)}
 
