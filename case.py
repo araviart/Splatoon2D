@@ -76,9 +76,6 @@ def get_joueurs(case):
         return set()
     return case['joueurs_presents']
 
-
-
-
 def get_nb_joueurs(case):
     """retourne le nombre de joueurs présents sur la case
 
@@ -89,7 +86,6 @@ def get_nb_joueurs(case):
         int: le nombre de joueurs présents sur la case.
     """
     return len(get_joueurs(case))
-
 
 def peindre(case, couleur):
     """Affecte la couleur passée en paramètre à la case et retourne la liste des
@@ -114,7 +110,6 @@ def laver(case):
     """
     case['couleur'] = ' '
 
-
 def poser_objet(case, objet):
     """Pose un objet sur la case. Si un objet était déjà présent ce dernier disparait
 
@@ -124,7 +119,6 @@ def poser_objet(case, objet):
                 trouve sur la case.
     """
     case['objet'] = objet
-
 
 def prendre_objet(case):
     """Enlève l'objet qui se trouve sur la case et retourne l'identifiant de cet objet.
@@ -140,7 +134,6 @@ def prendre_objet(case):
     res = case['objet']
     case['objet'] = 0
     return res
-    
 
 def poser_joueur(case, joueur):
     """Pose un nouveau joueur sur la case
@@ -151,7 +144,6 @@ def poser_joueur(case, joueur):
     """
     case['joueurs_presents'] = get_joueurs(case)
     case['joueurs_presents'].add(joueur)
-
 
 def prendre_joueur(case, joueur):
     """Enlève le joueur dont l'identifiant est passé en paramètre de la case.
