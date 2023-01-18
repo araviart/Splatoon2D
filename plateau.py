@@ -264,12 +264,14 @@ def directions_possibles(plateau,pos):
               de la case d'arrivée si on prend cette direction
               à partir de pos
     """
+    nb_lignes = get_nb_lignes(plateau)
+    nb_colonnes = get_nb_colonnes(plateau)
     liste = dict()
     for direction, pos2 in INC_DIRECTION.items():
         if direction != "X":
             new_pos = (pos2[0] + pos[0], pos2[1] + pos[1])
             # reste dans le plateau
-            if new_pos[0] >= 0 and new_pos[0] < get_nb_lignes(plateau) and new_pos[1] >= 0 and new_pos[1] < get_nb_colonnes(plateau):
+            if new_pos[0] >= 0 and new_pos[0] < nb_lignes and new_pos[1] >= 0 and new_pos[1] < nb_colonnes:
                 new_case = get_case(plateau, new_pos)
                 if case.est_mur(new_case) is False:
                     liste[direction] = case.get_couleur(new_case)
@@ -290,9 +292,11 @@ def nb_joueurs_direction(plateau, pos, direction, distance_max):
     direction = INC_DIRECTION[direction]
     nb = 0
     mur = False
+    nb_lignes = get_nb_lignes(plateau)
+    nb_colonnes = get_nb_colonnes(plateau)
     for i in range(distance_max):
         #reste dans le plateau
-        if pos[0] >= 0 and pos[0] < get_nb_lignes(plateau) and pos[1] >= 0 and pos[1] < get_nb_colonnes(plateau):
+        if pos[0] >= 0 and pos[0] < nb_lignes and pos[1] >= 0 and pos[1] < nb_colonnes:
             case_pl = get_case(plateau, pos)
             if case.est_mur(case_pl):
                 mur = True
@@ -332,9 +336,12 @@ def peindre(plateau, pos, direction, couleur, reserve, distance_max, peindre_mur
     direction = INC_DIRECTION[direction]
     nb = 0
     stop = False
+    nb_lignes = get_nb_lignes(plateau)
+    nb_colonnes = get_nb_colonnes(plateau)
+
     while nb < distance_max and stop is False:
         # si la position est hors du plateau
-        if pos[0] < 0 or pos[0] >= get_nb_lignes(plateau) or pos[1] < 0 or pos[1] >= get_nb_colonnes(plateau):
+        if pos[0] < 0 or pos[0] >= nb_lignes or pos[1] < 0 or pos[1] >= nb_colonnes:
             stop = True
 
         # si la case est un mur et on ne peut pas peindre les murs 
