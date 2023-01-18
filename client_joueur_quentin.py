@@ -75,6 +75,7 @@ def pistolet(plateau_jeux, pos, distance_max, deplacement_max):
 
             positions.remove(pos)
 
+    print(liste)
     max_nb = 0
     position = None
     for pos in liste:
@@ -167,7 +168,7 @@ with open("cartes/test.txt") as fic:
     plan=fic.read()
 
 p = plateau.Plateau(plan)
-print(pistolet(p, (11, 8), 5, 5))
+print(pistolet(p, (3, 7), 5, 5))
 
 def danger(plateau_jeux, pos, distance_max=5):
     nb = 0
