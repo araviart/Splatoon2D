@@ -3,13 +3,10 @@
 import const
 import case
 
-
 # dictionnaire permettant d'associer une direction et la position relative
 # de la case qui se trouve dans cette direction
 INC_DIRECTION = {'N': (-1, 0), 'E': (0, 1), 'S': (1, 0),
                  'O': (0, -1), 'X': (0, 0)}
-
-# plateau = { (0, 0) : ' ', (0,1) : ' ', (0, 2) : ' '}
 
 def get_nb_lignes(plateau):
     """retourne le nombre de lignes du plateau
@@ -84,8 +81,6 @@ def plateau_from_str(la_chaine):
     # Dans l'API plateau.py les fonction Plateau() et plateau_from_str() sont les mêmes en réalité. 
     # Inutile de faire l'implémentation de plateau_from_str()
 
-
-#le nombre de ligne est ici = y, et colonne = x 
 def Plateau(plan):
     """Créer un plateau en respectant le plan donné en paramètre.
         Le plan est une chaine de caractères contenant
@@ -126,10 +121,10 @@ def Plateau(plan):
             p = elem.split(";")
             l, c = int(p[1]), int(p[2])
             case_pl = get_case(plateau, (l, c))
-            if p[0].isalpha(): # signifie qu'un joueur est present
+            if p[0].isalpha(): # signifie qu'on doit placer un joueur 
                 case.poser_joueur(case_pl, p[0]) # on place le joueur
-            else: #objet 
-                case.poser_objet(case_pl, int(p[0]))
+            else: # sinon c'est un objet
+                case.poser_objet(case_pl, int(p[0])) # on place l'objet
     return plateau
     
 def set_case(plateau, pos, une_case):
@@ -211,16 +206,16 @@ def deplacer_joueur(plateau, joueur, pos, direction):
             if not case.est_mur(plateau[new_direc]): 
                 deplacement = True
         # identité de la case
-        if get_case(plateau, new_direc)["couleur"] == joueur:
+        if get_case(plateau, new_direc)["couleur"] == joueur: # mm couleur joueur
             valeurs = 1
-        elif get_case(plateau, new_direc)["couleur"] == " ":
+        elif get_case(plateau, new_direc)["couleur"] == " ": ## pas peinte
             valeurs = 0
-        elif get_case(plateau, new_direc)["couleur"] != " ":
+        elif get_case(plateau, new_direc)["couleur"] != " ": ## autre que joueur
             valeurs = -1
         # gestion objet
         objet = case.get_objet(plateau[new_direc])
-        prendre_objet(plateau, new_direc)
         if deplacement:
+            prendre_objet(plateau, new_direc)
             poser_joueur(plateau, joueur, new_direc)
             enlever_joueur(plateau, joueur, pos)
         deplacement_tuple = (deplacement, valeurs, objet, new_direc)
@@ -242,7 +237,6 @@ def surfaces_peintes(plateau, nb_joueurs):
         dict: un dictionnaire dont les clées sont les identifiants joueurs et les
             valeurs le nombre de cases peintes par le joueur
     """
-    liste_tout_joueur = set()
     joueurs = dict()
     for pos, valeur in plateau.items():
         couleur = case.get_couleur(valeur)
@@ -252,9 +246,8 @@ def surfaces_peintes(plateau, nb_joueurs):
                 joueurs[couleur] +=1
             else:
                 joueurs[couleur] = 1
-            liste_tout_joueur.add(couleur)
         case_pl = get_case(plateau, pos)
-        for joueur in case.get_joueurs(case_pl):
+        for joueur in case.get_joueurs(case_pl): # traitement de joeurs qui n'ont jamais peint
             if joueur not in joueurs.keys():
                 joueurs[joueur] = 0
     return joueurs
