@@ -31,33 +31,111 @@ def mon_IA(ma_couleur,carac_jeu, plan, les_joueurs):
         str: une chaine de deux caractères en majuscules indiquant la direction de peinture
             et la direction de déplacement
     """
-    pos = None
-    joueurs = les_joueurs.split("\n")
-    for joueur in joueurs:
-        info = joueur.split(";")
-        if info[0] == ma_couleur:
-            pos = (int(info[5]), int(info[6]))
-
     plateau_jeux = plateau.Plateau(plan)
+    pos = position(les_joueurs, ma_couleur)
+    objet_pl = objet(plateau_jeux, pos)
+    if objet_pl is not None:
+        if recup_objet(objet_pl[2], objet_joueur(les_joueurs, ma_couleur), reserve_joueur(les_joueurs, ma_couleur)):
+            direction = direction_chemin(plateau_jeux, pos, (objet_pl[0], objet_pl[1]))
+            if direction is not None:
+                return random.choice("NSOE")+direction
 
-    objets = []
+    return random.choice("NSOE")+random.choice("NSEO")
+
+def position(les_joueurs, couleur):
+    for joueur in les_joueurs.split("\n"):
+        info = joueur.split(";")
+        if info[0] == couleur:
+            return (int(info[5]), int(info[6]))
+    return (0, 0)
+
+def objet_joueur(les_joueurs, couleur):
+    for joueur in les_joueurs.split("\n"):
+        info = joueur.split(";")
+        if info[0] == couleur:
+            return int(info[3])
+    return const.AUCUN
+
+def reserve_joueur(les_joueurs, couleur):
+    for joueur in les_joueurs.split("\n"):
+        info = joueur.split(";")
+        if info[0] == couleur:
+            return int(info[1])
+    return 0
+
+def objet(plateau_jeux, pos_joueur):
+    """retourne l'objet le plus proche
+
+    Args:
+        plateau_jeux (_type_): _description_
+        pos_joueur (_type_): _description_
+
+    Returns:
+        None|tuple: _description_
+    """
+    o = None
+    dist = 0
     for l in range(plateau.get_nb_lignes(plateau_jeux)):
         for c in range(plateau.get_nb_colonnes(plateau_jeux)):
             casepl = plateau.get_case(plateau_jeux, (l, c))
             if case.get_objet(casepl) != const.AUCUN:
-                a = direction_chemin(plateau_jeux, pos, (l, c))
-                if a is not None:
-                    objets.append((l, c, a))
+                dist2 = distance(plateau_jeux, pos_joueur, (l, c))
+                if o is None or dist2 < dist:
+                    o = (l, c, case.get_objet(casepl))
+                    dist = dist2
+    return o
 
-    def critere(tuple):
-        return tuple[2]
+def plus_proche(plateau_jeux, les_joueurs, pos):
+    """retourne le joueur le plus proche d'une certaine position
 
-    if len(objets) > 0:
-        objet = sorted(objets, key=critere, reverse=True)[0]
-        print(objet[2], pos, (objet[0], objet[1]))
-        return random.choice("NSOE")+objet[2]
+    Args:
+        plateau_jeux (_type_): _description_
+        les_joueurs (_type_): _description_
+        pos (_type_): _description_
 
-    return random.choice("NSOE")+random.choice("NSEO")
+    Returns:
+        _type_: _description_
+    """
+    joueur = None
+    dist = 0
+    for j in les_joueurs.split("\n"):
+        info = j.split(";")
+        p = (int(info[5]), int(info[6]))
+        dist2 = distance(plateau_jeux, p, pos)
+        if joueur is None or dist2 < dist:
+            joueur = info[0]
+            dist = dist2
+    return joueur
+
+def recup_objet(objet, objet_joueur, reserve):
+    """indique si récupérer un objet est plus avantageux
+
+    Args:
+        objet (_type_): _description_
+        objet_joueur (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
+    if objet_joueur == const.AUCUN:
+        return True
+    
+    if objet == const.BIDON and reserve < 0:
+        return True
+    elif objet == const.BIDON and reserve >= 0:
+        return False
+        
+    classement = {
+        const.BOMBE: 2, 
+        const.BOUCLIER: 3,
+        const.PISTOLET: 1,
+    }
+    if classement[objet] < classement[objet_joueur]:
+        return True
+    return False
+
+def bombe(plateau_jeux, pos, deplacement_max):
+    pass
 
 def pistolet(plateau_jeux, pos, distance_max, deplacement_max):
     liste = dict()
@@ -75,7 +153,6 @@ def pistolet(plateau_jeux, pos, distance_max, deplacement_max):
 
             positions.remove(pos)
 
-    print(liste)
     max_nb = 0
     position = None
     for pos in liste:
@@ -98,29 +175,6 @@ def nb_mur(plateau_jeux, pos, direction, distance_max):
         pos = (pos[0]+direction[0], pos[1]+direction[1])
     return nb
 
-
-def recup_objet(plateau_jeux, joueurs, objet1, objet2):
-    distance_joueur = dict()
-    for joueur, info in joueurs.items():
-        #distance_joueur[joueur] = distance(plateau_jeux, (objet))
-        pass
-
-def joueurs_info(les_joueurs):
-    positions = dict()
-    for joueur in les_joueurs.split("\n"):
-        j = joueur.split(";")
-        positions[j[0]] = (int(j[1]), int(j[2]), int(j[3]), int(j[4]), int(j[5]), int(j[6]))
-    return positions
-
-def objets(plateau_jeux):
-    objets_pl = []
-    for l in range(plateau.get_nb_lignes(plateau_jeux)):
-        for c in range(plateau.get_nb_colonnes(plateau_jeux)):
-            casepl = plateau.get_case(plateau_jeux, (l, c))
-            objet = case.get_objet(casepl)
-            if objet != const.AUCUN:
-                objets_pl.append((l, c, objet))
-    return objets_pl
 
 def calque(plateau_jeux, pos1):
     liste = dict()
@@ -171,6 +225,16 @@ p = plateau.Plateau(plan)
 print(pistolet(p, (3, 7), 5, 5))
 
 def danger(plateau_jeux, pos, distance_max=5):
+    """indique si on peut etre touché par un autre joueur
+
+    Args:
+        plateau_jeux (_type_): _description_
+        pos (_type_): _description_
+        distance_max (int, optional): _description_. Defaults to 5.
+
+    Returns:
+        _type_: _description_
+    """    
     nb = 0
     for direction in plateau.INC_DIRECTION:
         nb += plateau.nb_joueurs_direction(plateau_jeux, pos, direction, distance_max)
@@ -190,22 +254,22 @@ def deplace_danger(plateau_jeux, pos, distance_max=5):
     return direction
 
 
-# if __name__=="__main__":
-#     parser = argparse.ArgumentParser()  
-#     parser.add_argument("--equipe", dest="nom_equipe", help="nom de l'équipe", type=str, default='Non fournie')
-#     parser.add_argument("--serveur", dest="serveur", help="serveur de jeu", type=str, default='localhost')
-#     parser.add_argument("--port", dest="port", help="port de connexion", type=int, default=1111)
+if __name__=="__main__":
+    parser = argparse.ArgumentParser()  
+    parser.add_argument("--equipe", dest="nom_equipe", help="nom de l'équipe", type=str, default='Non fournie')
+    parser.add_argument("--serveur", dest="serveur", help="serveur de jeu", type=str, default='localhost')
+    parser.add_argument("--port", dest="port", help="port de connexion", type=int, default=1111)
         
-#     args = parser.parse_args()
-#     le_client=client.ClientCyber()
-#     le_client.creer_socket(args.serveur,args.port)
-#     le_client.enregistrement(args.nom_equipe,"joueur")
-#     ok=True
-#     while ok:
-#         ok,id_joueur,le_jeu=le_client.prochaine_commande()
-#         if ok:
-#             carac_jeu,le_plateau,les_joueurs=le_jeu.split("--------------------\n")
-#             actions_joueur=mon_IA(id_joueur,carac_jeu,le_plateau,les_joueurs[:-1])
-#             le_client.envoyer_commande_client(actions_joueur)
-#             # le_client.afficher_msg("sa reponse  envoyée "+str(id_joueur)+args.nom_equipe)
-#     le_client.afficher_msg("terminé")
+    args = parser.parse_args()
+    le_client=client.ClientCyber()
+    le_client.creer_socket(args.serveur,args.port)
+    le_client.enregistrement(args.nom_equipe,"joueur")
+    ok=True
+    while ok:
+        ok,id_joueur,le_jeu=le_client.prochaine_commande()
+        if ok:
+            carac_jeu,le_plateau,les_joueurs=le_jeu.split("--------------------\n")
+            actions_joueur=mon_IA(id_joueur,carac_jeu,le_plateau,les_joueurs[:-1])
+            le_client.envoyer_commande_client(actions_joueur)
+            # le_client.afficher_msg("sa reponse  envoyée "+str(id_joueur)+args.nom_equipe)
+    le_client.afficher_msg("terminé")
