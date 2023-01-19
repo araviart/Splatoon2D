@@ -33,14 +33,51 @@ def mon_IA(ma_couleur,carac_jeu, plan, les_joueurs):
     """
     plateau_jeux = plateau.Plateau(plan)
     pos = position(les_joueurs, ma_couleur)
+    objet_j = objet_joueur(les_joueurs, ma_couleur)
+    reserve = reserve_joueur(les_joueurs, ma_couleur)
+    d = plateau.directions_possibles(plateau_jeux, pos)
+    direction = "N"
+    for a in d:
+        direction = a
+
+    if reserve < 0 and plateau.surfaces_peintes(plateau_jeux, 1)[ma_couleur] > 5:
+        c = case_plus_proche(plateau_jeux, pos, ma_couleur)
+        if c is not None:
+            direction = direction_chemin(plateau_jeux, pos, c)
+            if direction is not None:
+                print("a")
+                return "X"+direction
+
+    if objet_j == const.PISTOLET and reserve > 0:
+        positionn = pistolet(plateau_jeux, pos, 5, objet_duree(les_joueurs, ma_couleur))
+        if pos == (positionn[0], positionn[1]):
+            return positionn[2]+random.choice("NSEO")
+
+        if positionn is not None:
+            direction = direction_chemin(plateau_jeux, pos, (positionn[0], positionn[1]))
+            return random.choice("XNSEO")+direction
+
     objet_pl = objet(plateau_jeux, pos)
     if objet_pl is not None:
-        if recup_objet(objet_pl[2], objet_joueur(les_joueurs, ma_couleur), reserve_joueur(les_joueurs, ma_couleur)):
+        if recup_objet(objet_pl[2], objet_j, reserve):
             direction = direction_chemin(plateau_jeux, pos, (objet_pl[0], objet_pl[1]))
             if direction is not None:
-                return random.choice("NSOE")+direction
+                if reserve > 0:
+                    peindre = direction
+                else:
+                    peindre = "X"
+                return peindre+direction
 
-    return random.choice("NSOE")+random.choice("NSEO")
+    return random.choice("XNSEO")+random.choice("NSEO")
+
+def case_plus_proche(plateau_jeux, pos, couleur):
+    c = calque(plateau_jeux, pos)
+    for coordonne, valeur in c.items():
+        if coordonne != pos:
+            casepl = plateau.get_case(plateau_jeux, coordonne)
+            if case.get_couleur(casepl) == couleur:
+                return coordonne
+    return None
 
 def position(les_joueurs, couleur):
     for joueur in les_joueurs.split("\n"):
@@ -48,6 +85,13 @@ def position(les_joueurs, couleur):
         if info[0] == couleur:
             return (int(info[5]), int(info[6]))
     return (0, 0)
+
+def objet_duree(les_joueurs, couleur):
+    for joueur in les_joueurs.split("\n"):
+        info = joueur.split(";")
+        if info[0] == couleur:
+            return int(info[4])
+    return 0
 
 def objet_joueur(les_joueurs, couleur):
     for joueur in les_joueurs.split("\n"):
@@ -80,9 +124,10 @@ def objet(plateau_jeux, pos_joueur):
             casepl = plateau.get_case(plateau_jeux, (l, c))
             if case.get_objet(casepl) != const.AUCUN:
                 dist2 = distance(plateau_jeux, pos_joueur, (l, c))
-                if o is None or dist2 < dist:
-                    o = (l, c, case.get_objet(casepl))
-                    dist = dist2
+                if dist2 is not None:
+                    if o is None or dist2 < dist:
+                        o = (l, c, case.get_objet(casepl))
+                        dist = dist2
     return o
 
 def plus_proche(plateau_jeux, les_joueurs, pos):
@@ -120,12 +165,13 @@ def recup_objet(objet, objet_joueur, reserve):
     if objet_joueur == const.AUCUN:
         return True
     
-    if objet == const.BIDON and reserve < 0:
+    if objet == const.BIDON and reserve < -20:
         return True
     elif objet == const.BIDON and reserve >= 0:
         return False
         
     classement = {
+        const.BIDON: 4,
         const.BOMBE: 2, 
         const.BOUCLIER: 3,
         const.PISTOLET: 1,
@@ -170,7 +216,7 @@ def nb_mur(plateau_jeux, pos, direction, distance_max):
     for i in range(distance_max):
         if pos[0] >= 0 and pos[0] < plateau.get_nb_lignes(plateau_jeux) and pos[1] >= 0 and pos[1] < plateau.get_nb_colonnes(plateau_jeux):
             case_pl = plateau.get_case(plateau_jeux, pos)
-            if case.est_mur(case_pl):
+            if case.est_mur(case_pl) and case.get_couleur(case_pl) == " ":
                 nb += 1
         pos = (pos[0]+direction[0], pos[1]+direction[1])
     return nb
@@ -218,11 +264,6 @@ def distance(plateau_jeux, pos1, pos2):
                     liste.append(new_pos)
     return len(liste)
 
-with open("cartes/test.txt") as fic:
-    plan=fic.read()
-
-p = plateau.Plateau(plan)
-print(pistolet(p, (3, 7), 5, 5))
 
 def danger(plateau_jeux, pos, distance_max=5):
     """indique si on peut etre touché par un autre joueur
