@@ -52,8 +52,13 @@ def mon_IA(ma_couleur,carac_jeu, plan, les_joueurs):
 
     # si l'objet est un pistolet et qu'il peut tiré 
     if objet_j == const.PISTOLET and reserve > 0:
-        # position ou aller pour avoir un nombre de mur peint au maximal a l'utilisation du pistolet 
-        positionn = pistolet(plateau_jeux, pos, 5, objet_duree(les_joueurs, ma_couleur))
+
+        distance_max = 5
+        if reserve >= distance_max:
+            distance_max = reserve
+
+        # position ou aller pour avoir un nombre de mur peint au maximal a l'utilisation du pistolet
+        positionn = pistolet(plateau_jeux, pos, distance_max, objet_duree(les_joueurs, ma_couleur))
 
         # a atteint la position idéale pour tiré
         if pos == (positionn[0], positionn[1]):
