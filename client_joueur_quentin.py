@@ -61,7 +61,7 @@ def mon_IA(ma_couleur,carac_jeu, plan, les_joueurs):
                         return "X"+direction
 
     # si l'objet est un pistolet et qu'il peut tiré 
-    if objet_j == const.PISTOLET and reserve >= 5:
+    if objet_j == const.PISTOLET and reserve >= 10:
 
         distance_max = 5
         if reserve >= distance_max:
@@ -82,10 +82,11 @@ def mon_IA(ma_couleur,carac_jeu, plan, les_joueurs):
 
     # récupére l'objet le plus proche du joueur (accessible)
     objet_pl = objet(plateau_jeux, pos)
-    if objet_pl is not None and reserve >= 5: # aucun objet
+    if objet_pl is not None and reserve >= 10: # aucun objet
         # si la récupération de l'objet est intéréssante
+        print("a")
         if recup_objet(objet_pl[2], objet_j, reserve):
-
+            print("b")
             # transforme la position de l'objet en direction
             direction = direction_chemin(plateau_jeux, pos, (objet_pl[0], objet_pl[1]))
             if direction is not None:
@@ -97,9 +98,11 @@ def mon_IA(ma_couleur,carac_jeu, plan, les_joueurs):
                 return peindre+direction
 
     if reserve < 5:
-        d = tir(plateau_jeux, pos, 5, ma_couleur)
-        if d != "X":
-            return d+d
+        positionn = case_plus_proche(plateau_jeux, pos, ma_couleur)
+        if positionn is not None:
+            direction = direction_chemin(plateau_jeux, pos, positionn)
+            if direction is not None:
+                return "X"+direction
 
     # pour eviter un crash si il y a aucune directions possibles 
     direction = "N"
@@ -108,7 +111,7 @@ def mon_IA(ma_couleur,carac_jeu, plan, les_joueurs):
         direction = d
 
     # par default va dans une direction disponible et tir
-    return direction+direction
+    return "X"+direction
 
 def tir(plateau_jeux, pos, distance_max, couleur):
     direction = "X"
