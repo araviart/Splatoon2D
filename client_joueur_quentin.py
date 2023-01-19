@@ -78,8 +78,6 @@ def mon_IA(ma_couleur,carac_jeu, plan, les_joueurs):
         ETAT = ETAT_ID["bombe"]
 
     #############################
-
-    print(ETAT)
     
     if ETAT == ETAT_ID["pistolet"] and objet_j == const.PISTOLET:
         distance_max = 5
@@ -98,19 +96,16 @@ def mon_IA(ma_couleur,carac_jeu, plan, les_joueurs):
             direction = direction_chemin(plateau_jeux, pos, (positionn[0], positionn[1]))
             return tir(plateau_jeux, pos, 5, ma_couleur)+direction
 
-    elif ETAT == ETAT_ID["objet"]:
-        print("objet")
+    elif ETAT == ETAT_ID["objet"] and recup_objet(objet_pl[2], objet_j, reserve):
         # transforme la position de l'objet en direction
         print((objet_pl[0], objet_pl[1]))
         direction = direction_chemin(plateau_jeux, pos, (objet_pl[0], objet_pl[1]))
         if direction is not None:            
-            print("objet2")
             return "X"+direction
         else:
             objet_pl = objet(plateau_jeux, pos)
             direction = direction_chemin(plateau_jeux, pos, (objet_pl[0], objet_pl[1]))
             if direction is not None:
-                print("objet3")
                 return "X"+direction
 
     elif ETAT == ETAT_ID["bombe"] and objet_j == const.BOMBE:
@@ -139,11 +134,9 @@ def mon_IA(ma_couleur,carac_jeu, plan, les_joueurs):
         direction = d
 
     if ETAT == ETAT_ID["attaque"]:
-        print("attaque2")
-        return tir(plateau_jeux, pos, 5, ma_couleur)+direction
+        return direction+direction
 
     return "X"+direction
-
 
 
 def tir(plateau_jeux, pos, distance_max, couleur):
@@ -224,11 +217,13 @@ def objet(plateau_jeux, pos_joueur):
         for c in range(plateau.get_nb_colonnes(plateau_jeux)):
             casepl = plateau.get_case(plateau_jeux, (l, c))
             if case.get_objet(casepl) != const.AUCUN:
-                dist2 = distance(plateau_jeux, pos_joueur, (l, c))
-                if dist2 is not None:
-                    if o is None or dist2 < dist:
-                        o = (l, c, case.get_objet(casepl))
-                        dist = dist2
+                direction = direction_chemin(plateau_jeux, pos_joueur, (l, c))
+                if direction is not None:
+                    dist2 = distance(plateau_jeux, pos_joueur, (l, c))
+                    if dist2 is not None:
+                        if o is None or dist2 < dist:
+                            o = (l, c, case.get_objet(casepl))
+                            dist = dist2
     return o
 
 def plus_proche(plateau_jeux, les_joueurs, pos):
