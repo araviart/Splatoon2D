@@ -11,7 +11,17 @@ from math import *
 
 ETAT = 0
 
+ETAT_ID = {
+    "stack": 0,
+    "objet": 1,
+    "attaque": 2,
+    "bidon": 3,
+    "pistolet": 4,
+    "bombe": 5
+}
+
 def mon_IA(ma_couleur,carac_jeu, plan, les_joueurs):
+    global ETAT
     """ Cette fonction permet de calculer les deux actions du joueur de couleur ma_couleur
         en fonction de l'état du jeu décrit par les paramètres. 
         Le premier caractère est parmi XSNOE X indique pas de peinture et les autres
@@ -33,36 +43,45 @@ def mon_IA(ma_couleur,carac_jeu, plan, les_joueurs):
     """
     plateau_jeux = plateau.Plateau(plan)
     pos = position(les_joueurs, ma_couleur)
+
     objet_j = objet_joueur(les_joueurs, ma_couleur)
+    objet_d = objet_duree(les_joueurs, ma_couleur)
+
     reserve = reserve_joueur(les_joueurs, ma_couleur)
+    objet_pl = objet(plateau_jeux, pos)
 
-    # pour eviter un crash si il y a aucune directions possibles 
-    direction = "N"
-    # evite d'aller dans les murs
-    for d in plateau.directions_possibles(plateau_jeux, pos):
-        direction = d
-
-    # premier tour 
+    # premier tour 
     if int(carac_jeu.split(";")[0]) == 0:
-        return direction+direction
+        print("attaque")
+        ETAT = ETAT_ID["attaque"]
 
-    # si le joueur viens de récupérer un bidon et qu'il n'a pas de case peinte 
-    if reserve <= 5 and plateau.surfaces_peintes(plateau_jeux, len(les_joueurs.split(";")))[ma_couleur] <= 1:
-        return tir(plateau_jeux, pos, 5, ma_couleur)+direction
+    if reserve <= 5 or objet_pl is None:
+        plus_proche = case_plus_proche(plateau_jeux, pos, ma_couleur)
+        if plus_proche is not None:
+            dist = distance(plateau_jeux, pos, plus_proche)
+            if dist < reserve:
+                ETAT = ETAT_ID["stack"]
+            else:
+                ETAT = ETAT_ID["attaque"]
 
-    # récupere un bidon si plus de case et plus de reserve
+    # récupère un bidon si il a plus de case et plus de reserve
     if reserve < 0 and plateau.surfaces_peintes(plateau_jeux, len(les_joueurs.split(";")))[ma_couleur] <= 1:
-        for l in range(plateau.get_nb_lignes(plateau_jeux)):
-            for c in range(plateau.get_nb_colonnes(plateau_jeux)):
-                casepl = plateau.get_case(plateau_jeux, (l, c))
-                if case.get_objet(casepl) == const.BIDON:
-                    direction = direction_chemin(plateau_jeux, pos, (l, c))
-                    if direction is not None:
-                        return "X"+direction
+        ETAT = ETAT_ID["bidon"]
 
-    # si l'objet est un pistolet et qu'il peut tiré 
-    if objet_j == const.PISTOLET and reserve >= 10:
+    if objet_pl is not None and recup_objet(objet_pl[2], objet_j, reserve):
+        ETAT = ETAT_ID["objet"]
 
+    if objet_j == const.PISTOLET:
+        ETAT = ETAT_ID["pistolet"]
+
+    elif objet_j == const.BOMBE:
+        ETAT = ETAT_ID["bombe"]
+
+    #############################
+
+    print(ETAT)
+    
+    if ETAT == ETAT_ID["pistolet"] and objet_j == const.PISTOLET:
         distance_max = 5
         if reserve >= distance_max:
             distance_max = reserve
@@ -75,43 +94,57 @@ def mon_IA(ma_couleur,carac_jeu, plan, les_joueurs):
             return positionn[2]+random.choice("NSEO")
 
         if positionn is not None:
-
             # transforme la position en direction
             direction = direction_chemin(plateau_jeux, pos, (positionn[0], positionn[1]))
             return tir(plateau_jeux, pos, 5, ma_couleur)+direction
 
-    # récupére l'objet le plus proche du joueur (accessible)
-    objet_pl = objet(plateau_jeux, pos)
-    if objet_pl is not None and reserve >= 10: # aucun objet
-        # si la récupération de l'objet est intéréssante
-        print("a")
-        if recup_objet(objet_pl[2], objet_j, reserve):
-            print("b")
-            # transforme la position de l'objet en direction
+    elif ETAT == ETAT_ID["objet"]:
+        print("objet")
+        # transforme la position de l'objet en direction
+        print((objet_pl[0], objet_pl[1]))
+        direction = direction_chemin(plateau_jeux, pos, (objet_pl[0], objet_pl[1]))
+        if direction is not None:            
+            print("objet2")
+            return "X"+direction
+        else:
+            objet_pl = objet(plateau_jeux, pos)
             direction = direction_chemin(plateau_jeux, pos, (objet_pl[0], objet_pl[1]))
             if direction is not None:
-
-                if reserve > 0:
-                    peindre = tir(plateau_jeux, pos, 5, ma_couleur)
-                else:
-                    peindre = "X"
-                return peindre+direction
-
-    if reserve < 5:
-        positionn = case_plus_proche(plateau_jeux, pos, ma_couleur)
-        if positionn is not None:
-            direction = direction_chemin(plateau_jeux, pos, positionn)
-            if direction is not None:
+                print("objet3")
                 return "X"+direction
 
-    # pour eviter un crash si il y a aucune directions possibles 
+    elif ETAT == ETAT_ID["bombe"] and objet_j == const.BOMBE:
+        pass
+
+    elif ETAT == ETAT_ID["stack"]:
+        pass
+
+    elif ETAT == ETAT_ID["bidon"]:
+        for l in range(plateau.get_nb_lignes(plateau_jeux)):
+            for c in range(plateau.get_nb_colonnes(plateau_jeux)):
+                casepl = plateau.get_case(plateau_jeux, (l, c))
+                if case.get_objet(casepl) == const.BIDON:
+                    direction = direction_chemin(plateau_jeux, pos, (l, c))
+                    if direction is not None:
+                        return "X"+direction
+
+    pos2 = case_plus_proche(plateau_jeux, pos, ma_couleur)
+    if pos2 is not None:
+        direction = direction_chemin(plateau_jeux, pos, pos2)
+        if direction is not None:
+            return "X"+direction
+
     direction = "N"
-    # evite d'aller dans les murs
     for d in plateau.directions_possibles(plateau_jeux, pos):
         direction = d
 
-    # par default va dans une direction disponible et tir
+    if ETAT == ETAT_ID["attaque"]:
+        print("attaque2")
+        return tir(plateau_jeux, pos, 5, ma_couleur)+direction
+
     return "X"+direction
+
+
 
 def tir(plateau_jeux, pos, distance_max, couleur):
     direction = "X"
@@ -233,9 +266,9 @@ def recup_objet(objet, objet_joueur, reserve):
     if objet_joueur == const.AUCUN:
         return True
 
-    if objet == const.BIDON and reserve < -20:
+    if objet == const.BIDON and reserve < 0:
         return True
-    elif objet == const.BIDON and reserve >= 0:
+    elif objet == const.BIDON and reserve > 0:
         return False
         
     classement = {
