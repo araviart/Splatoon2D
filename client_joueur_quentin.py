@@ -32,6 +32,14 @@ def mon_IA(ma_couleur,carac_jeu, plan, les_joueurs):
         str: une chaine de deux caractères en majuscules indiquant la direction de peinture
             et la direction de déplacement
     """
+    # réglage
+    distance_max = 10
+
+    # reserve minimum pour attaquer
+    attaque = 20
+    # commence a récupéré de la peinture (seuil)
+    stack = 10
+
     etat_id = {
         "stack": 0,
         "objet": 1,
@@ -46,29 +54,26 @@ def mon_IA(ma_couleur,carac_jeu, plan, les_joueurs):
     plateau_jeux = plateau.Plateau(plan)
     pos = position(les_joueurs, ma_couleur)
 
+    direction_possible = "N" # par default pour eviter les crash si le joueur est bloqué
+    for i in plateau.directions_possibles(plateau_jeux, pos):
+        direction_possible = i
+
     objet_j = objet_joueur(les_joueurs, ma_couleur)
     objet_d = objet_duree(les_joueurs, ma_couleur)
 
     reserve = reserve_joueur(les_joueurs, ma_couleur)
 
+    # mettre le cout et si on est le plus pret 
     objet_pl = objet(plateau_jeux, pos)
 
     # premier et deuxième tour 
     if int(carac_jeu.split(";")[0]) == 0 or int(carac_jeu.split(";")[0]) == 1:
         etat = etat_id["start"]
 
-    elif objet_pl is not None and recup_objet(objet_pl[2], objet_j, reserve): # mettre le cout et si on est le plus pret 
-        etat = etat_id["objet"]
-
-    elif reserve >= 30 and etat != etat_id["objet"]:
-        etat = etat_id["attaque"]
-
-    elif objet_pl is None and reserve >= 20:
-        etat = etat_id["attaque"]
-
-    elif objet_pl is None and reserve <= 5:
+    elif reserve < stack:
         plus_proche = case_plus_proche(plateau_jeux, pos, ma_couleur)
         if plus_proche is not None:
+            # faire une fonction cout deplacement
             dist = distance(plateau_jeux, pos, plus_proche)
             if dist < reserve:
                 etat = etat_id["stack"]
@@ -77,63 +82,62 @@ def mon_IA(ma_couleur,carac_jeu, plan, les_joueurs):
         else:
             etat = etat_id["attaque"]
 
+    elif objet_pl is not None and recup_objet(objet_pl[2], objet_j, reserve):
+        etat = etat_id["objet"]
+
     elif objet_j == const.PISTOLET:
         etat = etat_id["pistolet"]
 
     elif objet_j == const.BOMBE:
         etat = etat_id["bombe"]
 
-    print(etat)
+    elif reserve >= attaque:
+        etat = etat_id["attaque"]
+
     #############################
     
-    if etat == etat_id["attaque"] and reserve > 30:
-        t = tir(plateau_jeux, pos, 5, ma_couleur)
-        return t+t
+    if etat == etat_id["attaque"]:
+        pos2 = attaque(plateau_jeux, pos, ma_couleur)
+        if pos2 is not None:
+            if pos == pos2:
+                return direction_possible+direction_possible
+            
+            direction = direction_chemin(plateau_jeux, pos, pos2)
+            if direction is not None:
+                return "X"+direction
 
-    if etat == etat_id["pistolet"] and objet_j == const.PISTOLET:
-        distance_max = 5
-        if reserve >= distance_max:
-            distance_max = reserve
-
+    if etat == etat_id["pistolet"]:
         # position ou aller pour avoir un nombre de mur peint au maximal a l'utilisation du pistolet
-        positionn = pistolet(plateau_jeux, pos, distance_max, objet_duree(les_joueurs, ma_couleur))
+        pos_pistolet = pistolet(plateau_jeux, pos, distance_max, objet_duree(les_joueurs, ma_couleur))
+        if pos_pistolet is not None:
+            # a atteint la position idéale pour tiré
+            if pos == (pos_pistolet[0], pos_pistolet[1]):
+                return pos_pistolet+direction_possible
 
-        # a atteint la position idéale pour tiré
-        if pos == (positionn[0], positionn[1]):
-            return positionn[2]+random.choice("NSEO")
-
-        if positionn is not None:
             # transforme la position en direction
-            direction = direction_chemin(plateau_jeux, pos, (positionn[0], positionn[1]))
-            return tir(plateau_jeux, pos, 5, ma_couleur)+direction
+            direction = direction_chemin(plateau_jeux, pos, (pos_pistolet[0], pos_pistolet[1]))
+            if direction is not None:
+                return "X"+direction
 
-    elif etat == etat_id["objet"] and recup_objet(objet_pl[2], objet_j, reserve):
+    elif etat == etat_id["bombe"]:
+        # position ou aller pour avoir un nombre de mur peint au maximal a l'utilisation de la bombe
+        pos_bombe = bombe(plateau_jeux, pos, distance_max, objet_duree(les_joueurs, ma_couleur))
+        if pos_bombe is not None:
+
+            # a atteint la position idéale pour tiré
+            if pos == (pos_bombe[0], pos_bombe[1]):
+                return pos_bombe[2]+direction_possible
+
+            # transforme la position en direction
+            direction = direction_chemin(plateau_jeux, pos, (pos_bombe[0], pos_bombe[1]))
+            if direction is not None:
+                return "X"+direction
+
+    elif etat == etat_id["objet"]:
         # transforme la position de l'objet en direction
         direction = direction_chemin(plateau_jeux, pos, (objet_pl[0], objet_pl[1]))
         if direction is not None:            
             return "X"+direction
-        else:
-            objet_pl = objet(plateau_jeux, pos)
-            direction = direction_chemin(plateau_jeux, pos, (objet_pl[0], objet_pl[1]))
-            if direction is not None:
-                return "X"+direction
-
-    elif etat == etat_id["bombe"] and objet_j == const.BOMBE:
-        distance_max = 5
-        if reserve >= distance_max:
-            distance_max = reserve
-
-        # position ou aller pour avoir un nombre de mur peint au maximal a l'utilisation du pistolet
-        positionn = bombe(plateau_jeux, pos, distance_max, objet_duree(les_joueurs, ma_couleur))
-
-        # a atteint la position idéale pour tiré
-        if pos == (positionn[0], positionn[1]):
-            return positionn[2]+random.choice("NSEO")
-
-        if positionn is not None:
-            # transforme la position en direction
-            direction = direction_chemin(plateau_jeux, pos, (positionn[0], positionn[1]))
-            return tir(plateau_jeux, pos, 5, ma_couleur)+direction
 
     elif etat == etat_id["stack"]:
         pos2 = case_plus_proche(plateau_jeux, pos, ma_couleur)
@@ -151,16 +155,11 @@ def mon_IA(ma_couleur,carac_jeu, plan, les_joueurs):
                     if direction is not None:
                         return "X"+direction
 
-    direction = "N"
-    for d in plateau.directions_possibles(plateau_jeux, pos):
-        direction = d
+    elif etat == etat_id["start"]:
+        return direction_possible+direction_possible
 
-    if etat == etat_id["start"]:
-        return direction+direction
-
-
-    return "X"+direction
-
+    #tir et déplace dans la meme direction
+    return direction_possible+direction_possible
 
 def tir(plateau_jeux, pos, distance_max, couleur):
     direction = "X"
@@ -177,53 +176,25 @@ def tir(plateau_jeux, pos, distance_max, couleur):
             nb_direction = nb
             direction = d
 
-    # si il y a aucune case a peindre on le peint pas
+    # si il y a aucune case a peindre
     if nb_direction == 0:
         return "X"
 
     return direction
 
-def bombe(plateau_jeux, pos, distance_max, deplacement_max): # deplacement max avant que l'item disparaisse
-    liste_pos = dict() # liste des positions
-    positions = [] #stocke position
-    positions.append(pos) # stocke premiere position
-    liste_pos[pos] = 0
-    while len(positions) > 0: # tant qu'il y'a toujours une position
-        for pos in positions.copy(): # parcours pos
-            for direction in plateau.directions_possibles(plateau_jeux, pos): 
-                d = plateau.INC_DIRECTION[direction]
-                new_pos = (pos[0] + d[0], pos[1] + d[1])
-                if new_pos not in liste_pos.keys() and liste_pos[pos]+1 < deplacement_max: # si le déplacement n'a pas était mit à liste
-                    liste_pos[new_pos] = liste_pos[pos] +1 # ajout de la nouvelle position
-                    positions.append(new_pos) # plus de position
-            positions.remove(pos)
-    position = None
-    max_nb = 0
-    for pos in liste_pos:
-        for d, pos2 in plateau.INC_DIRECTION.items():
-            if d != "X":
-                nbcase = nb_case(plateau_jeux, pos, d, distance_max)
-                if position is None or nbcase > max_nb:
-                    max_nb = nbcase
-                    position = (pos[0], pos[1], d)
-    return position
-
-
-def nb_case(plateau_jeux, pos, direction, distance_max):
-    direction = plateau.INC_DIRECTION[direction]
-    nb = 0
-    for i in range(distance_max):
-        if pos[0] >= 0 and pos[0] < plateau.get_nb_lignes(plateau_jeux) and pos[1] >= 0 and pos[1] < plateau.get_nb_colonnes(plateau_jeux):
-            case_pl = plateau.get_case(plateau_jeux, pos)
-            if not case.est_mur(case_pl):
-                nb += 1
-        pos = (pos[0]+direction[0], pos[1]+direction[1])
-    return nb
+def attaque(plateau_jeux, pos, couleur):
+    c = calque(plateau_jeux, pos)
+    for coordonne, valeur in c.items():
+        if coordonne != pos: #ne va pas sur la case ou il se trouve
+            casepl = plateau.get_case(plateau_jeux, coordonne)
+            if case.get_couleur(casepl) != couleur and case.est_mur(casepl) is False:
+                return coordonne
+    return None
 
 def case_plus_proche(plateau_jeux, pos, couleur):
     c = calque(plateau_jeux, pos)
     for coordonne, valeur in c.items():
-        if coordonne != pos:
+        if coordonne != pos: #ne va pas sur la case ou il se trouve
             casepl = plateau.get_case(plateau_jeux, coordonne)
             if case.get_couleur(casepl) == couleur and case.est_mur(casepl) is False:
                 return coordonne
@@ -360,6 +331,43 @@ def pistolet(plateau_jeux, pos, distance_max, deplacement_max):
                 max_nb = mur
                 position = (pos[0], pos[1], d)
 
+    return position
+
+def bombe(plateau_jeux, pos, distance_max, deplacement_max):
+    liste_pos = dict() 
+    positions = [] 
+    positions.append(pos)
+    liste_pos[pos] = 0
+
+    while len(positions) > 0:
+        for pos in positions.copy():
+            for direction in plateau.directions_possibles(plateau_jeux, pos): 
+                d = plateau.INC_DIRECTION[direction]
+                new_pos = (pos[0] + d[0], pos[1] + d[1])
+                if new_pos not in liste_pos.keys() and liste_pos[pos]+1 < deplacement_max: # si le déplacement n'a pas était mit à liste
+                    liste_pos[new_pos] = liste_pos[pos] +1
+                    positions.append(new_pos)
+            positions.remove(pos)
+
+    position = None
+    max_nb = 0
+    for pos in liste_pos:
+        nb = 0
+        for direction, pos2 in plateau.INC_DIRECTION.items():
+            mur = False
+            for i in range(distance_max):
+                if pos[0] >= 0 and pos[0] < plateau.get_nb_lignes(plateau_jeux) and pos[1] >= 0 and pos[1] < plateau.get_nb_colonnes(plateau_jeux):
+                    case_pl = plateau.get_case(plateau_jeux, pos)
+                    if case.est_mur(case_pl):
+                        mur = True
+
+                    if mur is False:
+                        nb += 1
+                pos = (pos[0]+pos2[0], pos[1]+pos2[1])
+
+        if position is None or nb > max_nb:
+            max_nb = nb
+            position = (pos[0], pos[1], direction)
     return position
 
 def nb_mur(plateau_jeux, pos, direction, distance_max):
