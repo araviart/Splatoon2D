@@ -17,7 +17,7 @@ TOUS = 3
 
 NB_JOUEURS = 2
 
-TEMPO=0.5
+TEMPO=0.2
 
 class Table_Clients(object):
     def __init__(self, nb_joueurs_max, nb_afficheur_max=5):

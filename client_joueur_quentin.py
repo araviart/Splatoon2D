@@ -35,41 +35,56 @@ def mon_IA(ma_couleur,carac_jeu, plan, les_joueurs):
     pos = position(les_joueurs, ma_couleur)
     objet_j = objet_joueur(les_joueurs, ma_couleur)
     reserve = reserve_joueur(les_joueurs, ma_couleur)
-    d = plateau.directions_possibles(plateau_jeux, pos)
-    direction = "N"
-    for a in d:
-        direction = a
 
-    if reserve < 0 and plateau.surfaces_peintes(plateau_jeux, 1)[ma_couleur] > 5:
+    # pour eviter un crash si il y a aucune directions possibles 
+    direction = "N"
+    # evite d'aller dans les murs
+    for d in plateau.directions_possibles(plateau_jeux, pos):
+        direction = d
+
+    # récupère de la reserve si négatif
+    if reserve < 2 and plateau.surfaces_peintes(plateau_jeux, 1)[ma_couleur] > 5:
         c = case_plus_proche(plateau_jeux, pos, ma_couleur)
         if c is not None:
             direction = direction_chemin(plateau_jeux, pos, c)
             if direction is not None:
-                return tir(plateau_jeux, pos, 5)+direction
+                return "X"+direction
 
+    # si l'objet est un pistolet et qu'il peut tiré 
     if objet_j == const.PISTOLET and reserve > 0:
+        # position ou aller pour avoir un nombre de mur peint au maximal a l'utilisation du pistolet 
         positionn = pistolet(plateau_jeux, pos, 5, objet_duree(les_joueurs, ma_couleur))
+
+        # a atteint la position idéale pour tiré
         if pos == (positionn[0], positionn[1]):
             return positionn[2]+random.choice("NSEO")
 
         if positionn is not None:
-            direction = direction_chemin(plateau_jeux, pos, (positionn[0], positionn[1]))
-            return tir(plateau_jeux, pos, 5)+direction
 
+            # transforme la position en direction
+            direction = direction_chemin(plateau_jeux, pos, (positionn[0], positionn[1]))
+            return tir(plateau_jeux, pos, 5, ma_couleur)+direction
+
+    # récupére l'objet le plus proche du joueur (accessible)
     objet_pl = objet(plateau_jeux, pos)
-    if objet_pl is not None:
+    if objet_pl is not None: # aucun objet
+
+        # si la récupération de l'objet est intéréssante
         if recup_objet(objet_pl[2], objet_j, reserve):
+
+            # transforme la position de l'objet en direction
             direction = direction_chemin(plateau_jeux, pos, (objet_pl[0], objet_pl[1]))
             if direction is not None:
                 if reserve > 0:
-                    peindre = direction
+                    peindre = tir(plateau_jeux, pos, 5, ma_couleur)
                 else:
                     peindre = "X"
                 return peindre+direction
 
-    return tir(plateau_jeux, pos, 5)+random.choice("NSEO")
+    # par default va dans une direction disponible et tir si intéréssant
+    return tir(plateau_jeux, pos, 5, ma_couleur)+direction
 
-def tir(plateau_jeux, pos, distance_max):
+def tir(plateau_jeux, pos, distance_max, couleur):
     direction = "X"
     nb_direction = 0
     for d, pos2 in plateau.INC_DIRECTION.items():
@@ -80,7 +95,7 @@ def tir(plateau_jeux, pos, distance_max):
                 case_pl = plateau.get_case(plateau_jeux, pos)
                 if case.est_mur(case_pl):
                     mur = True
-                if mur is False and case.get_couleur(case_pl) == " ":
+                if mur is False and case.get_couleur(case_pl) != couleur:
                     nb += 1
             pos = (pos[0]+pos2[0], pos[1]+pos2[1])
         mur = False
