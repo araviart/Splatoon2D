@@ -45,8 +45,7 @@ def mon_IA(ma_couleur,carac_jeu, plan, les_joueurs):
         if c is not None:
             direction = direction_chemin(plateau_jeux, pos, c)
             if direction is not None:
-                print("a")
-                return "X"+direction
+                return tir(plateau_jeux, pos, 5)+direction
 
     if objet_j == const.PISTOLET and reserve > 0:
         positionn = pistolet(plateau_jeux, pos, 5, objet_duree(les_joueurs, ma_couleur))
@@ -55,7 +54,7 @@ def mon_IA(ma_couleur,carac_jeu, plan, les_joueurs):
 
         if positionn is not None:
             direction = direction_chemin(plateau_jeux, pos, (positionn[0], positionn[1]))
-            return random.choice("XNSEO")+direction
+            return tir(plateau_jeux, pos, 5)+direction
 
     objet_pl = objet(plateau_jeux, pos)
     if objet_pl is not None:
@@ -68,7 +67,32 @@ def mon_IA(ma_couleur,carac_jeu, plan, les_joueurs):
                     peindre = "X"
                 return peindre+direction
 
-    return random.choice("XNSEO")+random.choice("NSEO")
+    return tir(plateau_jeux, pos, 5)+random.choice("NSEO")
+
+def tir(plateau_jeux, pos, distance_max):
+    direction = "X"
+    nb_direction = 0
+    for d, pos2 in plateau.INC_DIRECTION.items():
+        nb = 0
+        mur = False
+        for i in range(distance_max):
+            if pos[0] >= 0 and pos[0] < plateau.get_nb_lignes(plateau_jeux) and pos[1] >= 0 and pos[1] < plateau.get_nb_colonnes(plateau_jeux):
+                case_pl = plateau.get_case(plateau_jeux, pos)
+                if case.est_mur(case_pl):
+                    mur = True
+                if mur is False and case.get_couleur(case_pl) == " ":
+                    nb += 1
+            pos = (pos[0]+pos2[0], pos[1]+pos2[1])
+        mur = False
+        if direction == "X" or nb > nb_direction:
+            nb_direction = nb
+            direction = d
+
+    # si il y a aucune case a peindre on le peint pas
+    if nb_direction == 0:
+        return "X"
+
+    return direction
 
 def case_plus_proche(plateau_jeux, pos, couleur):
     c = calque(plateau_jeux, pos)
