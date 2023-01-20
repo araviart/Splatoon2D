@@ -65,9 +65,6 @@ def mon_IA(ma_couleur,carac_jeu, plan, les_joueurs):
     if int(carac_jeu.split(";")[0]) == 0 or int(carac_jeu.split(";")[0]) == 1:
         etat = etat_id["start"]
 
-    elif reserve >= attaque_seuil:
-        etat = etat_id["attaque"]
-
     # plus aucune case et plus de peinture
     elif reserve < 0 and plateau.surfaces_peintes(plateau_jeux, len(les_joueurs.split(";")))[ma_couleur] <= 1:
         # recherche un bidon
@@ -108,7 +105,8 @@ def mon_IA(ma_couleur,carac_jeu, plan, les_joueurs):
     elif objet_j == const.BOMBE:
         etat = etat_id["bombe"]
 
-
+    elif reserve >= attaque_seuil:
+        etat = etat_id["attaque"]
 
     # action en fonction de l'etat
     
@@ -158,7 +156,12 @@ def mon_IA(ma_couleur,carac_jeu, plan, les_joueurs):
     elif etat == etat_id["objet"]:
         # transforme la position de l'objet en direction
         direction = direction_chemin(plateau_jeux, pos, (objet_pl[0], objet_pl[1]))
-        if direction is not None:            
+        if direction is not None:
+            if reserve >= attaque_seuil:
+                d = meilleur_tir(plateau_jeux, pos, ma_couleur, distance_max)
+                if d is not None:
+                    return d+direction
+
             return "X"+direction
 
     elif etat == etat_id["stack"]:
@@ -193,6 +196,26 @@ def mon_IA(ma_couleur,carac_jeu, plan, les_joueurs):
 
     #tir et se déplace dans une direction possible
     return direction_possible+direction_possible
+
+def meilleur_tir(plateau_jeux, pos, couleur, distance_max):
+    direction = None
+    nb_max = 0
+    for d, pos2 in plateau.INC_DIRECTION.items():
+        pos3 = pos
+        mur = False
+        nb = 0
+        for i in range(distance_max):
+            pos3 = (pos3[0] + pos2[0], pos3[1] + pos2[1])
+            if pos3[0] >= 0 and pos3[0] < plateau.get_nb_lignes(plateau_jeux) and pos3[1] >= 0 and pos3[1] < plateau.get_nb_colonnes(plateau_jeux):
+                casepl = plateau.get_case(plateau_jeux, pos3)
+                if case.est_mur(casepl):
+                    mur = True
+                if mur is False and case.get_couleur(casepl) != couleur:
+                    nb += 1
+        if direction is None or nb > nb_max:
+            direction = d
+            nb_max = nb
+    return direction
 
 def attaque(plateau_jeux, pos, couleur):
     """retourne la case la plus proche pouvant etre peinte
