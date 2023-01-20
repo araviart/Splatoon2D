@@ -258,7 +258,7 @@ def cumul_peinture(plateau_jeux, pos, couleur):
                         new_casepl = plateau.get_case(plateau_jeux, new_pos)
                         if case.get_couleur(new_casepl) == couleur or case.get_couleur(new_casepl) == " " and case.est_mur(new_casepl):
                             return coordonne
-    return None
+    return None # aucun emplacement
 
 def position(les_joueurs, couleur):
     """retourne la position d'un joueur en particulier
