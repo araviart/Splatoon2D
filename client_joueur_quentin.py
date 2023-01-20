@@ -198,6 +198,17 @@ def mon_IA(ma_couleur,carac_jeu, plan, les_joueurs):
     return direction_possible+direction_possible
 
 def meilleur_tir(plateau_jeux, pos, couleur, distance_max):
+    """retourne la meilleur direction pour tirer
+
+    Args:
+        plateau_jeux (dict): plateau du jeu
+        pos (tuple): position du joueur
+        couleur (str): couleur du joueur
+        distance_max (int): distance max 
+
+    Returns:
+        str: direction
+    """    
     direction = None
     nb_max = 0
     for d, pos2 in plateau.INC_DIRECTION.items():
