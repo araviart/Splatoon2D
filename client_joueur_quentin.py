@@ -12,7 +12,6 @@ from math import *
 #autre item que le pistolet sur la case ou le pistolet doit etre utilisé
 
 def mon_IA(ma_couleur,carac_jeu, plan, les_joueurs):
-    global ETAT
     """ Cette fonction permet de calculer les deux actions du joueur de couleur ma_couleur
         en fonction de l'état du jeu décrit par les paramètres. 
         Le premier caractère est parmi XSNOE X indique pas de peinture et les autres
@@ -36,7 +35,7 @@ def mon_IA(ma_couleur,carac_jeu, plan, les_joueurs):
     distance_max = 10
 
     # reserve minimum pour attaquer
-    attaque = 20
+    attaque_seuil = 20
     # commence a récupéré de la peinture (seuil)
     stack = 10
 
@@ -70,11 +69,17 @@ def mon_IA(ma_couleur,carac_jeu, plan, les_joueurs):
     if int(carac_jeu.split(";")[0]) == 0 or int(carac_jeu.split(";")[0]) == 1:
         etat = etat_id["start"]
 
+    elif reserve >= 50:
+        etat = etat_id["attaque"]
+
+    elif reserve < 0:
+        etat = etat_id["stack"]
+
     elif reserve < stack:
-        plus_proche = case_plus_proche(plateau_jeux, pos, ma_couleur)
-        if plus_proche is not None:
+        cplus_proche = case_plus_proche(plateau_jeux, pos, ma_couleur)
+        if cplus_proche is not None:
             # faire une fonction cout deplacement
-            dist = distance(plateau_jeux, pos, plus_proche)
+            dist = distance(plateau_jeux, pos, cplus_proche)
             if dist < reserve:
                 etat = etat_id["stack"]
             else:
@@ -83,7 +88,8 @@ def mon_IA(ma_couleur,carac_jeu, plan, les_joueurs):
             etat = etat_id["attaque"]
 
     elif objet_pl is not None and recup_objet(objet_pl[2], objet_j, reserve):
-        etat = etat_id["objet"]
+        if plus_proche(plateau_jeux, les_joueurs, (objet_pl[0], objet_pl[1])) == ma_couleur:
+            etat = etat_id["objet"]
 
     elif objet_j == const.PISTOLET:
         etat = etat_id["pistolet"]
@@ -91,28 +97,30 @@ def mon_IA(ma_couleur,carac_jeu, plan, les_joueurs):
     elif objet_j == const.BOMBE:
         etat = etat_id["bombe"]
 
-    elif reserve >= attaque:
+    elif reserve >= attaque_seuil:
         etat = etat_id["attaque"]
 
+    print(etat)
     #############################
     
     if etat == etat_id["attaque"]:
         pos2 = attaque(plateau_jeux, pos, ma_couleur)
         if pos2 is not None:
+            print(pos, pos2)
             if pos == pos2:
                 return direction_possible+direction_possible
             
             direction = direction_chemin(plateau_jeux, pos, pos2)
             if direction is not None:
-                return "X"+direction
+                return direction+direction
 
     if etat == etat_id["pistolet"]:
         # position ou aller pour avoir un nombre de mur peint au maximal a l'utilisation du pistolet
-        pos_pistolet = pistolet(plateau_jeux, pos, distance_max, objet_duree(les_joueurs, ma_couleur))
+        pos_pistolet = pistolet(plateau_jeux, pos, distance_max, objet_d)
         if pos_pistolet is not None:
             # a atteint la position idéale pour tiré
             if pos == (pos_pistolet[0], pos_pistolet[1]):
-                return pos_pistolet+direction_possible
+                return pos_pistolet[2]+direction_possible
 
             # transforme la position en direction
             direction = direction_chemin(plateau_jeux, pos, (pos_pistolet[0], pos_pistolet[1]))
@@ -121,16 +129,18 @@ def mon_IA(ma_couleur,carac_jeu, plan, les_joueurs):
 
     elif etat == etat_id["bombe"]:
         # position ou aller pour avoir un nombre de mur peint au maximal a l'utilisation de la bombe
-        pos_bombe = bombe(plateau_jeux, pos, distance_max, objet_duree(les_joueurs, ma_couleur))
+        pos_bombe = bombe(plateau_jeux, pos, distance_max, objet_d)
         if pos_bombe is not None:
-
+            print("bombe1")
             # a atteint la position idéale pour tiré
             if pos == (pos_bombe[0], pos_bombe[1]):
+                print("bombe2")
                 return pos_bombe[2]+direction_possible
 
             # transforme la position en direction
             direction = direction_chemin(plateau_jeux, pos, (pos_bombe[0], pos_bombe[1]))
             if direction is not None:
+                print("bombe2")
                 return "X"+direction
 
     elif etat == etat_id["objet"]:
