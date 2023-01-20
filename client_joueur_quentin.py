@@ -65,7 +65,7 @@ def mon_IA(ma_couleur,carac_jeu, plan, les_joueurs):
     if int(carac_jeu.split(";")[0]) == 0 or int(carac_jeu.split(";")[0]) == 1:
         etat = etat_id["start"]
 
-    elif reserve >= 50:
+    elif reserve >= attaque_seuil:
         etat = etat_id["attaque"]
 
     # plus aucune case et plus de peinture
@@ -108,8 +108,7 @@ def mon_IA(ma_couleur,carac_jeu, plan, les_joueurs):
     elif objet_j == const.BOMBE:
         etat = etat_id["bombe"]
 
-    elif reserve >= attaque_seuil:
-        etat = etat_id["attaque"]
+
 
     # action en fonction de l'etat
     
