@@ -35,7 +35,7 @@ def mon_IA(ma_couleur,carac_jeu, plan, les_joueurs):
     distance_max = 10
 
     # reserve minimum pour attaquer
-    attaque_seuil = 20
+    attaque_seuil = 10
     # commence a récupéré de la peinture (seuil)
     stack = 10
 
@@ -72,15 +72,17 @@ def mon_IA(ma_couleur,carac_jeu, plan, les_joueurs):
     elif reserve >= 50:
         etat = etat_id["attaque"]
 
+    elif reserve < 0 and plateau.surfaces_peintes(plateau_jeux, len(les_joueurs.split(";")))[ma_couleur] == 0:
+        etat = etat_id["bidon"]
+
     elif reserve < 0:
         etat = etat_id["stack"]
 
     elif reserve < stack:
         cplus_proche = case_plus_proche(plateau_jeux, pos, ma_couleur)
         if cplus_proche is not None:
-            # faire une fonction cout deplacement
-            dist = distance(plateau_jeux, pos, cplus_proche)
-            if dist < reserve:
+            cout = cout_chemin(plateau_jeux, pos, (cplus_proche[0], cplus_proche[1]), ma_couleur)
+            if cout < reserve:
                 etat = etat_id["stack"]
             else:
                 etat = etat_id["attaque"]
@@ -88,8 +90,11 @@ def mon_IA(ma_couleur,carac_jeu, plan, les_joueurs):
             etat = etat_id["attaque"]
 
     elif objet_pl is not None and recup_objet(objet_pl[2], objet_j, reserve):
-        if plus_proche(plateau_jeux, les_joueurs, (objet_pl[0], objet_pl[1])) == ma_couleur:
-            etat = etat_id["objet"]
+        cplus_proche = plus_proche(plateau_jeux, les_joueurs, (objet_pl[0], objet_pl[1]))
+        if cplus_proche == ma_couleur:
+            cout = cout_chemin(plateau_jeux, pos, (objet_pl[0], objet_pl[1]), ma_couleur)
+            if cout < reserve:
+                etat = etat_id["objet"]
 
     elif objet_j == const.PISTOLET:
         etat = etat_id["pistolet"]
@@ -100,13 +105,11 @@ def mon_IA(ma_couleur,carac_jeu, plan, les_joueurs):
     elif reserve >= attaque_seuil:
         etat = etat_id["attaque"]
 
-    print(etat)
     #############################
     
     if etat == etat_id["attaque"]:
         pos2 = attaque(plateau_jeux, pos, ma_couleur)
         if pos2 is not None:
-            print(pos, pos2)
             if pos == pos2:
                 return direction_possible+direction_possible
             
@@ -131,10 +134,8 @@ def mon_IA(ma_couleur,carac_jeu, plan, les_joueurs):
         # position ou aller pour avoir un nombre de mur peint au maximal a l'utilisation de la bombe
         pos_bombe = bombe(plateau_jeux, pos, distance_max, objet_d)
         if pos_bombe is not None:
-            print("bombe1")
             # a atteint la position idéale pour tiré
             if pos == (pos_bombe[0], pos_bombe[1]):
-                print("bombe2")
                 return pos_bombe[2]+direction_possible
 
             # transforme la position en direction
@@ -150,7 +151,7 @@ def mon_IA(ma_couleur,carac_jeu, plan, les_joueurs):
             return "X"+direction
 
     elif etat == etat_id["stack"]:
-        pos2 = case_plus_proche(plateau_jeux, pos, ma_couleur)
+        pos2 = cumul_peinture(plateau_jeux, pos, ma_couleur)
         if pos2 is not None:
             direction = direction_chemin(plateau_jeux, pos, pos2)
             if direction is not None:
@@ -208,6 +209,20 @@ def case_plus_proche(plateau_jeux, pos, couleur):
             casepl = plateau.get_case(plateau_jeux, coordonne)
             if case.get_couleur(casepl) == couleur and case.est_mur(casepl) is False:
                 return coordonne
+    return None
+
+def cumul_peinture(plateau_jeux, pos, couleur):
+    c = calque(plateau_jeux, pos)
+    for coordonne, valeur in c.items():
+        if coordonne != pos: #ne va pas sur la case ou il se trouve
+            casepl = plateau.get_case(plateau_jeux, coordonne)
+            if case.get_couleur(casepl) == couleur and case.est_mur(casepl) is False:
+                for d in plateau.INC_DIRECTION.values():
+                    new_pos = (coordonne[0] + d[0], coordonne[1] + d[1])
+                    if new_pos[0] >= 0 and new_pos[0] < plateau.get_nb_lignes(plateau_jeux) and new_pos[1] >= 0 and new_pos[1] < plateau.get_nb_colonnes(plateau_jeux):
+                        new_casepl = plateau.get_case(plateau_jeux, new_pos)
+                        if case.get_couleur(new_casepl) == couleur or case.get_couleur(new_casepl) == " " and case.est_mur(new_casepl):
+                            return coordonne
     return None
 
 def position(les_joueurs, couleur):
@@ -434,6 +449,28 @@ def distance(plateau_jeux, pos1, pos2):
                     liste.append(new_pos)
     return len(liste)
 
+def cout_chemin(plateau_jeux, pos1, pos2, couleur):
+    liste = []
+    liste.append(pos1)
+    calque_plateau = calque(plateau_jeux, pos2)
+    while pos1 in calque_plateau.keys() and calque_plateau[pos1] != 0:
+        for d, p in plateau.INC_DIRECTION.items():
+            new_pos = (pos1[0] + p[0], pos1[1] + p[1])
+            if new_pos in calque_plateau.keys():
+                if calque_plateau[new_pos] + 1 == calque_plateau[pos1]:
+                    pos1 = new_pos
+                    liste.append(new_pos)
+    liste.remove(pos1)
+    cout = 0
+    for position in liste:
+        casepl = plateau.get_case(plateau_jeux, position)
+        if case.get_couleur(casepl) == couleur:
+            cout -= 1
+        elif case.get_couleur(casepl) == " ":
+            cout += 1
+        elif case.get_couleur(casepl) != couleur:
+            cout += 2
+    return cout
 
 def danger(plateau_jeux, pos, distance_max=5):
     """indique si on peut etre touché par un autre joueur
