@@ -9,8 +9,6 @@ import joueur
 
 from math import *
 
-#autre item que le pistolet sur la case ou le pistolet doit etre utilisé
-
 def mon_IA(ma_couleur,carac_jeu, plan, les_joueurs):
     """ Cette fonction permet de calculer les deux actions du joueur de couleur ma_couleur
         en fonction de l'état du jeu décrit par les paramètres. 
@@ -33,11 +31,8 @@ def mon_IA(ma_couleur,carac_jeu, plan, les_joueurs):
     """
     # réglage
     distance_max = 10
-
-    # reserve minimum pour attaquer
-    attaque_seuil = 10
-    # commence a récupéré de la peinture (seuil)
-    stack = 10
+    attaque_seuil = 10 # reserve minimum pour attaquer
+    stack = 10 # récupere de la peinture si la reserve est en dessous
 
     etat_id = {
         "stack": 0,
@@ -48,7 +43,7 @@ def mon_IA(ma_couleur,carac_jeu, plan, les_joueurs):
         "bombe": 5,
         "start": 6
     }
-    etat = 0
+    etat = 0 # par default
 
     plateau_jeux = plateau.Plateau(plan)
     pos = position(les_joueurs, ma_couleur)
@@ -57,12 +52,13 @@ def mon_IA(ma_couleur,carac_jeu, plan, les_joueurs):
     for i in plateau.directions_possibles(plateau_jeux, pos):
         direction_possible = i
 
+    # objet possèdé par le joueur
     objet_j = objet_joueur(les_joueurs, ma_couleur)
     objet_d = objet_duree(les_joueurs, ma_couleur)
 
     reserve = reserve_joueur(les_joueurs, ma_couleur)
 
-    # mettre le cout et si on est le plus pret 
+    # objet disponible sur le plateau
     objet_pl = objet(plateau_jeux, pos)
 
     # premier et deuxième tour 
@@ -72,24 +68,34 @@ def mon_IA(ma_couleur,carac_jeu, plan, les_joueurs):
     elif reserve >= 50:
         etat = etat_id["attaque"]
 
+    # plus aucune case et plus de peinture
     elif reserve < 0 and plateau.surfaces_peintes(plateau_jeux, len(les_joueurs.split(";")))[ma_couleur] == 0:
+        # recherche un bidon
         etat = etat_id["bidon"]
 
     elif reserve < 0:
         etat = etat_id["stack"]
 
     elif reserve < stack:
+        # case la plus proche pour récupérer de la peinture 
         cplus_proche = case_plus_proche(plateau_jeux, pos, ma_couleur)
         if cplus_proche is not None:
+
+            # récupère le cout du trajet pour rejoindre la peinture du joueur la plus proche
             cout = cout_chemin(plateau_jeux, pos, (cplus_proche[0], cplus_proche[1]), ma_couleur)
             if cout < reserve:
                 etat = etat_id["stack"]
+
+        # pose de la peinture pour pouvoir en gagner
             else:
                 etat = etat_id["attaque"]
         else:
             etat = etat_id["attaque"]
 
+    #si un objet est présent et qu'il est avantageux
     elif objet_pl is not None and recup_objet(objet_pl[2], objet_j, reserve):
+
+        # récupère l'objet seulement si il est le plus pret
         cplus_proche = plus_proche(plateau_jeux, les_joueurs, (objet_pl[0], objet_pl[1]))
         if cplus_proche == ma_couleur:
             cout = cout_chemin(plateau_jeux, pos, (objet_pl[0], objet_pl[1]), ma_couleur)
@@ -105,20 +111,25 @@ def mon_IA(ma_couleur,carac_jeu, plan, les_joueurs):
     elif reserve >= attaque_seuil:
         etat = etat_id["attaque"]
 
-    #############################
+    # action en fonction de l'etat
     
     if etat == etat_id["attaque"]:
+
+        # récupère la position de la case qui n'a pas la meme couleur 
         pos2 = attaque(plateau_jeux, pos, ma_couleur)
         if pos2 is not None:
             if pos == pos2:
+                #peint la case
                 return direction_possible+direction_possible
             
+            # transforme la position en direction 
             direction = direction_chemin(plateau_jeux, pos, pos2)
             if direction is not None:
+                # se dirige vers la case
                 return direction+direction
 
     if etat == etat_id["pistolet"]:
-        # position ou aller pour avoir un nombre de mur peint au maximal a l'utilisation du pistolet
+        # position ou aller pour avoir un nombre de mur peint le plus rentable
         pos_pistolet = pistolet(plateau_jeux, pos, distance_max, objet_d)
         if pos_pistolet is not None:
             # a atteint la position idéale pour tiré
@@ -128,10 +139,11 @@ def mon_IA(ma_couleur,carac_jeu, plan, les_joueurs):
             # transforme la position en direction
             direction = direction_chemin(plateau_jeux, pos, (pos_pistolet[0], pos_pistolet[1]))
             if direction is not None:
+                # se dirige vers la position idéale
                 return "X"+direction
 
     elif etat == etat_id["bombe"]:
-        # position ou aller pour avoir un nombre de mur peint au maximal a l'utilisation de la bombe
+        # position ou aller pour avoir un nombre de case peinte le plus rentable
         pos_bombe = bombe(plateau_jeux, pos, distance_max, objet_d)
         if pos_bombe is not None:
             # a atteint la position idéale pour tiré
@@ -141,7 +153,7 @@ def mon_IA(ma_couleur,carac_jeu, plan, les_joueurs):
             # transforme la position en direction
             direction = direction_chemin(plateau_jeux, pos, (pos_bombe[0], pos_bombe[1]))
             if direction is not None:
-                print("bombe2")
+                # se dirige vers la position idéale
                 return "X"+direction
 
     elif etat == etat_id["objet"]:
@@ -151,49 +163,49 @@ def mon_IA(ma_couleur,carac_jeu, plan, les_joueurs):
             return "X"+direction
 
     elif etat == etat_id["stack"]:
+
+        # récupère la position la plus proche qui permet de récupéré de la peinture 
+        # en alternant de position entre deux cases 
         pos2 = cumul_peinture(plateau_jeux, pos, ma_couleur)
         if pos2 is not None:
+
+            #transforme la position en direction
             direction = direction_chemin(plateau_jeux, pos, pos2)
             if direction is not None:
                 return "X"+direction
 
+    # récupère les bidons peut importe la distance
+    # utile si le joueur n'a plus de case et de reserve
     elif etat == etat_id["bidon"]:
         for l in range(plateau.get_nb_lignes(plateau_jeux)):
             for c in range(plateau.get_nb_colonnes(plateau_jeux)):
                 casepl = plateau.get_case(plateau_jeux, (l, c))
                 if case.get_objet(casepl) == const.BIDON:
+
+                    # direction a prendre pour aller a la position
                     direction = direction_chemin(plateau_jeux, pos, (l, c))
                     if direction is not None:
                         return "X"+direction
 
+    # permet de poser directement de peinture pour commencer
+    # a en gagner d'avantage
     elif etat == etat_id["start"]:
         return direction_possible+direction_possible
 
-    #tir et déplace dans la meme direction
+    #tir et se déplace dans une direction possible
     return direction_possible+direction_possible
 
-def tir(plateau_jeux, pos, distance_max, couleur):
-    direction = "X"
-    nb_direction = 0
-    for d, pos2 in plateau.INC_DIRECTION.items():
-        nb = 0
-        for i in range(distance_max):
-            if pos[0] >= 0 and pos[0] < plateau.get_nb_lignes(plateau_jeux) and pos[1] >= 0 and pos[1] < plateau.get_nb_colonnes(plateau_jeux):
-                case_pl = plateau.get_case(plateau_jeux, pos)
-                if case.est_mur(case_pl) and case.get_couleur(case_pl) != couleur:
-                    nb += 1
-            pos = (pos[0]+pos2[0], pos[1]+pos2[1])
-        if direction == "X" or nb > nb_direction:
-            nb_direction = nb
-            direction = d
-
-    # si il y a aucune case a peindre
-    if nb_direction == 0:
-        return "X"
-
-    return direction
-
 def attaque(plateau_jeux, pos, couleur):
+    """retourne la case la plus proche pouvant etre peinte
+
+    Args:
+        plateau_jeux (dict): plateau du jeu
+        pos (tuple): position du joueur (ligne, colonne)
+        couleur (str): couleur du joueur
+
+    Returns:
+        tuple|None: tuple (ligne, colonne) de la position de la case la plus proche, None si aucune
+    """    
     c = calque(plateau_jeux, pos)
     for coordonne, valeur in c.items():
         if coordonne != pos: #ne va pas sur la case ou il se trouve
@@ -203,6 +215,16 @@ def attaque(plateau_jeux, pos, couleur):
     return None
 
 def case_plus_proche(plateau_jeux, pos, couleur):
+    """retourne la position de la case la plus proche d'une certaine couleur
+
+    Args:
+        plateau_jeux (dict): plateau du jeu
+        pos (tuple): position du joueur (ligne, colonne)
+        couleur (str): couleur du joueur
+
+    Returns:
+        tuple|None: tuple (ligne, colonne) de la position de la case la plus proche, None si aucune
+    """    
     c = calque(plateau_jeux, pos)
     for coordonne, valeur in c.items():
         if coordonne != pos: #ne va pas sur la case ou il se trouve
@@ -212,13 +234,26 @@ def case_plus_proche(plateau_jeux, pos, couleur):
     return None
 
 def cumul_peinture(plateau_jeux, pos, couleur):
+    """determine l'emplacement ou aller afin de récupéré de la peinture
+
+    Args:
+        plateau_jeux (dict): plateau du jeu
+        pos (tuple): position du joueur (ligne, colonne)
+        couleur (str): couleur du joueur
+
+    Returns:
+        tuple|None: tuple (ligne, colonne) de la position de la case la plus proche, None si aucune
+    """    
     c = calque(plateau_jeux, pos)
     for coordonne, valeur in c.items():
-        if coordonne != pos: #ne va pas sur la case ou il se trouve
+        if coordonne != pos:
             casepl = plateau.get_case(plateau_jeux, coordonne)
             if case.get_couleur(casepl) == couleur and case.est_mur(casepl) is False:
+
+                # recherche si une autre case est présente a coter afin d'alterner
                 for d in plateau.INC_DIRECTION.values():
                     new_pos = (coordonne[0] + d[0], coordonne[1] + d[1])
+                    # la position est sur le plateau
                     if new_pos[0] >= 0 and new_pos[0] < plateau.get_nb_lignes(plateau_jeux) and new_pos[1] >= 0 and new_pos[1] < plateau.get_nb_colonnes(plateau_jeux):
                         new_casepl = plateau.get_case(plateau_jeux, new_pos)
                         if case.get_couleur(new_casepl) == couleur or case.get_couleur(new_casepl) == " " and case.est_mur(new_casepl):
@@ -226,20 +261,53 @@ def cumul_peinture(plateau_jeux, pos, couleur):
     return None
 
 def position(les_joueurs, couleur):
+    """retourne la position d'un joueur en particulier
+
+    Args:
+        les_joueurs (str): le liste des joueurs avec leur caractéristique (1 joueur par ligne)
+        couleur;reserve;nb_cases_peintes;objet;duree_objet;ligne;colonne;nom_complet
+
+        couleur (str): couleur du joueur
+
+    Returns:
+        tuple: (ligne, colonne)
+    """    
     for joueur in les_joueurs.split("\n"):
         info = joueur.split(";")
         if info[0] == couleur:
             return (int(info[5]), int(info[6]))
-    return (0, 0)
+    return (0, 0) #normalement se produit jamais
 
 def objet_duree(les_joueurs, couleur):
+    """retourne la durée de l'objet d'un joueur en particulier
+
+    Args:
+        les_joueurs (str): le liste des joueurs avec leur caractéristique (1 joueur par ligne)
+        couleur;reserve;nb_cases_peintes;objet;duree_objet;ligne;colonne;nom_complet
+
+        couleur (str): couleur du joueur
+
+    Returns:
+        int: tour restant avant la disparition
+    """   
     for joueur in les_joueurs.split("\n"):
         info = joueur.split(";")
         if info[0] == couleur:
             return int(info[4])
-    return 0
+    return 0 #normalement se produit jamais
 
 def objet_joueur(les_joueurs, couleur):
+    """retourne l'objet d'un joueur en particulier
+
+    Args:
+        les_joueurs (str): le liste des joueurs avec leur caractéristique (1 joueur par ligne)
+        couleur;reserve;nb_cases_peintes;objet;duree_objet;ligne;colonne;nom_complet
+
+        couleur (str): couleur du joueur
+
+    Returns:
+        int: id de l'objet du joueur
+    """   
     for joueur in les_joueurs.split("\n"):
         info = joueur.split(";")
         if info[0] == couleur:
@@ -247,6 +315,17 @@ def objet_joueur(les_joueurs, couleur):
     return const.AUCUN
 
 def reserve_joueur(les_joueurs, couleur):
+    """retourne la reserve d'un joueur en particulier
+
+    Args:
+        les_joueurs (str): le liste des joueurs avec leur caractéristique (1 joueur par ligne)
+        couleur;reserve;nb_cases_peintes;objet;duree_objet;ligne;colonne;nom_complet
+
+        couleur (str): couleur du joueur
+
+    Returns:
+        int: reserve de peinture
+    """   
     for joueur in les_joueurs.split("\n"):
         info = joueur.split(";")
         if info[0] == couleur:
@@ -254,14 +333,14 @@ def reserve_joueur(les_joueurs, couleur):
     return 0
 
 def objet(plateau_jeux, pos_joueur):
-    """retourne l'objet le plus proche
+    """retourne l'objet qui est le plus proche
 
     Args:
-        plateau_jeux (_type_): _description_
-        pos_joueur (_type_): _description_
+        plateau_jeux (dict): plateau
+        pos_joueur (tuple): position du joueur sur le plateau (ligne, colonne)
 
     Returns:
-        None|tuple: _description_
+        None|tuple: tuple (ligne, colonne, objet) ou None si aucun 
     """
     o = None
     dist = 0
@@ -282,12 +361,13 @@ def plus_proche(plateau_jeux, les_joueurs, pos):
     """retourne le joueur le plus proche d'une certaine position
 
     Args:
-        plateau_jeux (_type_): _description_
-        les_joueurs (_type_): _description_
-        pos (_type_): _description_
+        plateau_jeux (dict): plateau du jeu
+        les_joueurs (str): le liste des joueurs avec leur caractéristique (1 joueur par ligne)
+        couleur;reserve;nb_cases_peintes;objet;duree_objet;ligne;colonne;nom_complet        
+        pos (tuple): position (ligne, colonne)
 
     Returns:
-        _type_: _description_
+        str: joueur le plus proche de la position
     """
     joueur = None
     dist = 0
@@ -301,11 +381,11 @@ def plus_proche(plateau_jeux, les_joueurs, pos):
     return joueur
 
 def recup_objet(objet, objet_joueur, reserve):
-    """indique si récupérer un objet est plus avantageux
+    """indique si récupérer l'objet est plus avantageux
 
     Args:
-        objet (_type_): _description_
-        objet_joueur (_type_): _description_
+        objet (int): objet qui peut etre récupéré
+        objet_joueur (_type_): objet du joueur
 
     Returns:
         _type_: _description_
@@ -321,6 +401,7 @@ def recup_objet(objet, objet_joueur, reserve):
     elif objet == const.BIDON and reserve > 0:
         return False
         
+    # classement pour avoir un ordre de priorité
     classement = {
         const.BIDON: 4,
         const.BOMBE: 1, 
@@ -332,10 +413,23 @@ def recup_objet(objet, objet_joueur, reserve):
     return False
 
 def pistolet(plateau_jeux, pos, distance_max, deplacement_max):
+    """indique la meilleur position pour utiliser le pistolet
+
+    Args:
+        plateau_jeux (dict): plateau du jeu
+        pos (tuple): position (ligne, colonne)
+        direction (str): direction 
+        distance_max (int): distance maximum
+
+    Returns:
+       tuple: position du meilleur emplacement pour utiliser le pistolet
+    """   
     liste = dict()
     positions = []
     positions.append(pos)
     liste[pos] = 0
+
+    # récupère les positions possibles dans un certain rayon (deplacement_max)
     while len(positions) > 0:
         for pos in positions.copy():
             for direction in plateau.directions_possibles(plateau_jeux, pos):
@@ -350,20 +444,34 @@ def pistolet(plateau_jeux, pos, distance_max, deplacement_max):
     max_nb = 0
     position = None
     for pos in liste:
-        for d, pos2 in plateau.INC_DIRECTION.items():
-            mur = nb_mur(plateau_jeux, pos, d, distance_max)
-            if position is None or mur > max_nb:
-                max_nb = mur
-                position = (pos[0], pos[1], d)
-
+        casepl = plateau.get_case(plateau_jeux, pos)
+        objet_pos = case.get_objet(casepl)
+        if objet_pos == const.AUCUN or objet_pos == const.PISTOLET:
+            for d, pos2 in plateau.INC_DIRECTION.items():
+                mur = nb_mur(plateau_jeux, pos, d, distance_max)
+                if position is None or mur > max_nb:
+                    max_nb = mur
+                    position = (pos[0], pos[1], d)
     return position
 
 def bombe(plateau_jeux, pos, distance_max, deplacement_max):
+    """indique la meilleur position pour utiliser la bombe
+
+    Args:
+        plateau_jeux (dict): plateau du jeu
+        pos (tuple): position (ligne, colonne)
+        direction (str): direction 
+        distance_max (int): distance maximum
+
+    Returns:
+       tuple: position du meilleur emplacement pour utiliser la bombe
+    """    
     liste_pos = dict() 
     positions = [] 
     positions.append(pos)
     liste_pos[pos] = 0
 
+    # récupère les positions possibles dans un certain rayon (deplacement_max)
     while len(positions) > 0:
         for pos in positions.copy():
             for direction in plateau.directions_possibles(plateau_jeux, pos): 
@@ -396,9 +504,21 @@ def bombe(plateau_jeux, pos, distance_max, deplacement_max):
     return position
 
 def nb_mur(plateau_jeux, pos, direction, distance_max):
+    """retourne le nombre de mur dans une direction a une certaine position
+
+    Args:
+        plateau_jeux (dict): plateau du jeu
+        pos (tuple): position (ligne, colonne)
+        direction (str): direction 
+        distance_max (int): distance maximum
+
+    Returns:
+        int: nombre de mur 
+    """    
     direction = plateau.INC_DIRECTION[direction]
     nb = 0
     for i in range(distance_max):
+        #si la position est sur le plateau
         if pos[0] >= 0 and pos[0] < plateau.get_nb_lignes(plateau_jeux) and pos[1] >= 0 and pos[1] < plateau.get_nb_colonnes(plateau_jeux):
             case_pl = plateau.get_case(plateau_jeux, pos)
             if case.est_mur(case_pl) and case.get_couleur(case_pl) == " ":
@@ -408,6 +528,15 @@ def nb_mur(plateau_jeux, pos, direction, distance_max):
 
 
 def calque(plateau_jeux, pos1):
+    """retourne un calque du plateau indiquant la distance de chaque case par rapport à la position
+
+    Args:
+        plateau_jeux (dict): plateau du jeu
+        pos1 (tuple): position (ligne, colonne)
+
+    Returns:
+        dict: positions avec leur distance de la premier position comme valeur
+    """    
     liste = dict()
     positions = []
     positions.append(pos1)
@@ -425,6 +554,16 @@ def calque(plateau_jeux, pos1):
     return liste
 
 def direction_chemin(plateau_jeux, pos1, pos2):
+    """donne la direction a prendre afin d'aller a la deuxieme position
+
+    Args:
+        plateau_jeux (dict): plateau du jeu
+        pos1 (tuple): position (ligne, colonne)
+        pos2 (tuple): position (ligne, colonne)
+
+    Returns:
+        str|None: direction ou None si pas accessible
+    """    
     calque_plateau = calque(plateau_jeux, pos2)
     while pos1 in calque_plateau.keys() and calque_plateau[pos1] != 0:
         for d, p in plateau.INC_DIRECTION.items():
@@ -437,6 +576,16 @@ def direction_chemin(plateau_jeux, pos1, pos2):
     return None
 
 def distance(plateau_jeux, pos1, pos2):
+    """retourne la distance entre deux positions
+
+    Args:
+        plateau_jeux (dict): plateau du jeu
+        pos1 (tuple): position (ligne, colonne)
+        pos2 (tuple): position (ligne, colonne)
+
+    Returns:
+        int: distance entre deux positions
+    """    
     liste = []
     liste.append(pos1)
     calque_plateau = calque(plateau_jeux, pos2)
@@ -450,6 +599,17 @@ def distance(plateau_jeux, pos1, pos2):
     return len(liste)
 
 def cout_chemin(plateau_jeux, pos1, pos2, couleur):
+    """indique le cout en peindure d'un chemin entre deux positions
+
+    Args:
+        plateau_jeux (dict): plateau du jeu
+        pos1 (tuple): position (ligne, colonne)
+        pos2 (tuple): position (ligne, colonne)
+        couleur (str): couleur du joueur
+
+    Returns:
+        int: cout du chemin
+    """    
     liste = []
     liste.append(pos1)
     calque_plateau = calque(plateau_jeux, pos2)
@@ -471,36 +631,6 @@ def cout_chemin(plateau_jeux, pos1, pos2, couleur):
         elif case.get_couleur(casepl) != couleur:
             cout += 2
     return cout
-
-def danger(plateau_jeux, pos, distance_max=5):
-    """indique si on peut etre touché par un autre joueur
-
-    Args:
-        plateau_jeux (_type_): _description_
-        pos (_type_): _description_
-        distance_max (int, optional): _description_. Defaults to 5.
-
-    Returns:
-        _type_: _description_
-    """    
-    nb = 0
-    for direction in plateau.INC_DIRECTION:
-        nb += plateau.nb_joueurs_direction(plateau_jeux, pos, direction, distance_max)
-    if nb > 0:
-        return True
-    return False
-
-def deplace_danger(plateau_jeux, pos, distance_max=5):
-    directions = plateau.directions_possibles(plateau_jeux, pos)
-    nb_min = 0
-    direction = None
-    for d in directions.keys():
-        nb = plateau.nb_joueurs_direction(plateau_jeux, pos, d, distance_max)
-        if direction is None or nb_min < nb:
-            direction = d
-            nb_min = nb
-    return direction
-
 
 if __name__=="__main__":
     parser = argparse.ArgumentParser()  
