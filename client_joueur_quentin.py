@@ -69,7 +69,7 @@ def mon_IA(ma_couleur,carac_jeu, plan, les_joueurs):
         etat = etat_id["attaque"]
 
     # plus aucune case et plus de peinture
-    elif reserve < 0 and plateau.surfaces_peintes(plateau_jeux, len(les_joueurs.split(";")))[ma_couleur] == 0:
+    elif reserve < 0 and plateau.surfaces_peintes(plateau_jeux, len(les_joueurs.split(";")))[ma_couleur] <= 1:
         # recherche un bidon
         etat = etat_id["bidon"]
 
