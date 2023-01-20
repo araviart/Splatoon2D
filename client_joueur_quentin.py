@@ -30,8 +30,8 @@ def mon_IA(ma_couleur,carac_jeu, plan, les_joueurs):
             et la direction de déplacement
     """
     # réglage
-    distance_max = 10
-    attaque_seuil = 10 # reserve minimum pour attaquer
+    distance_max = 5
+    attaque_seuil = 20 # reserve minimum pour attaquer
     stack = 10 # récupere de la peinture si la reserve est en dessous
 
     etat_id = {
