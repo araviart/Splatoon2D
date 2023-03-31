@@ -224,6 +224,8 @@ def deplacer_joueur(plateau, joueur, pos, direction):
 # fonctions d'observation du plateau
 #-----------------------------
 
+
+
 def surfaces_peintes(plateau, nb_joueurs):
     """retourne un dictionnaire indiquant le nombre de cases peintes pour chaque joueur.
 
@@ -236,6 +238,7 @@ def surfaces_peintes(plateau, nb_joueurs):
             valeurs le nombre de cases peintes par le joueur
     """
     joueurs = dict()
+
     for pos, valeur in plateau.items():
         couleur = case.get_couleur(valeur)
         if couleur != ' ':

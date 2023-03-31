@@ -199,13 +199,13 @@ class test_case(unittest.TestCase):
         self.assertEqual(plateau.nb_joueurs_direction(p1, (3,2), 'O', 3),1)
         self.assertEqual(plateau.nb_joueurs_direction(p1, (3,2), 'E', 3),0)
         p2=plateau.Plateau(self.plan2)
-        self.assertEqual(plateau.nb_joueurs_direction(p2, (2,1), 'N', 10),0)
+        self.assertEqual(plateau.nb_joueurs_direction(p2, (2,1), 'N', 10),0) 
         self.assertEqual(plateau.nb_joueurs_direction(p2, (2,1), 'S', 10),0)
         self.assertEqual(plateau.nb_joueurs_direction(p2, (2,1), 'O', 10),0)
         self.assertEqual(plateau.nb_joueurs_direction(p2, (2,1), 'E', 10),1)
 
-        self.assertEqual(plateau.nb_joueurs_direction(p2, (9,1), 'N', 10),0)
-        self.assertEqual(plateau.nb_joueurs_direction(p2, (9,1), 'S', 10),0)
+        self.assertEqual(plateau.nb_joueurs_direction(p2, (9,1), 'N', 10),0) 
+        self.assertEqual(plateau.nb_joueurs_direction(p2, (9,1), 'S', 10),0) 
         self.assertEqual(plateau.nb_joueurs_direction(p2, (9,1), 'O', 10),0)
         self.assertEqual(plateau.nb_joueurs_direction(p2, (9,1), 'E', 10),0)
         
